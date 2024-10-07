@@ -1,0 +1,5 @@
+Stuff to do:
+- references
+- determine whether to do bold font or arrow for vectors and put it throughout the doc
+- Why is the adjacency matrix W_rec? Should it be W_res instead?
+- Include a table
