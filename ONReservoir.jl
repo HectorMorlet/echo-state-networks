@@ -45,7 +45,10 @@ function find_probs(partition)
 end
 
 function create_transition_matrix(part_symbols)
-    # Example array of symbols
+    # Remove any nothing values
+    part_symbols = filter(x -> x !== nothing, part_symbols)
+    
+    # Get unique symbols
     symbols = unique(part_symbols)
 
     # 2×n matrix of transitions

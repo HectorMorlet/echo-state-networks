@@ -18,8 +18,8 @@ struct ESNParameters
     num_partitions::Int64 # this is the number of partitions
 end
 
-function create_ESN_params(k, d, ρ, α, η, β; num_partitions=1, part_connection=0.0, ON_part_adjacency=nothing)
-    V_in, V_rec, V_bias = create_ESN(k, d, ρ, num_partitions=num_partitions, part_connection=part_connection, ON_part_adjacency=ON_part_adjacency)
+function create_ESN_params(k, d, ρ, α, η, β; num_partitions=1, ON_part_adjacency=nothing)
+    V_in, V_rec, V_bias = create_ESN(k, d, ρ, num_partitions=num_partitions, ON_part_adjacency=ON_part_adjacency)
     ESN_params = ESNParameters(V_in, V_rec, V_bias, k, α, η, β, num_partitions)
     
     return(ESN_params)
@@ -49,7 +49,7 @@ end
 # mask_adjacency!(test_matrix, test_k, test_m, test_part_connection, test_ON_part_adjacency)
 
 # test_matrix
-function mask_adjacency!(V_rec, k, num_partitions, part_connection, ON_part_adjacency)
+function mask_adjacency!(V_rec, k, num_partitions, ON_part_adjacency)
     for part_i in 1:num_partitions
         for part_j in 1:num_partitions
             if part_i == part_j
@@ -58,22 +58,25 @@ function mask_adjacency!(V_rec, k, num_partitions, part_connection, ON_part_adja
             
             V_rec[(part_i-1)*k+1:part_i*k,(part_j-1)*k+1:part_j*k] .= 0.0
             
-            if part_j in ON_part_adjacency[part_i]
+            if ON_part_adjacency[part_i,part_j] > 0
                 for i in 1:k
-                    V_rec[(part_i-1)*k+i,(part_j-1)*k+i] = part_connection
+                    V_rec[(part_i-1)*k+i,(part_j-1)*k+i] = ON_part_adjacency[part_i, part_j]
                 end
             end
         end
     end
 end
 
-function create_ESN(k, d, ρ; num_partitions=1, part_connection=0.5, ON_part_adjacency=nothing)
+
+
+
+function create_ESN(k, d, ρ; num_partitions=1, ON_part_adjacency=nothing)
     V_in = randn(k*num_partitions)
     
     V_rec = erdos_renyi_adjacency(k*num_partitions, d)
     
     if ON_part_adjacency != nothing
-        mask_adjacency!(V_rec, k, num_partitions, part_connection, ON_part_adjacency)
+        mask_adjacency!(V_rec, k, num_partitions, ON_part_adjacency)
     end
     
     max_abs_ev = maximum(abs.(eigen(V_rec).values))
