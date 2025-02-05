@@ -18,8 +18,8 @@ struct ESNParameters
     num_partitions::Int64 # this is the number of partitions
 end
 
-function create_ESN_params(k, d, ρ, α, η, β; num_partitions=1, ON_part_adjacency=nothing)
-    V_in, V_rec, V_bias = create_ESN(k, d, ρ, num_partitions=num_partitions, ON_part_adjacency=ON_part_adjacency)
+function create_ESN_params(k, d, ρ, α, η, β; num_partitions=1, ON_part_adjacency=nothing, ON_part_set_connection=nothing)
+    V_in, V_rec, V_bias = create_ESN(k, d, ρ, num_partitions=num_partitions, ON_part_adjacency=ON_part_adjacency, set_connection=ON_part_set_connection)
     ESN_params = ESNParameters(V_in, V_rec, V_bias, k, α, η, β, num_partitions)
     
     return(ESN_params)
@@ -49,18 +49,25 @@ end
 # mask_adjacency!(test_matrix, test_k, test_m, test_part_connection, test_ON_part_adjacency)
 
 # test_matrix
-function mask_adjacency!(V_rec, k, num_partitions, ON_part_adjacency)
+function mask_adjacency!(V_rec, k, num_partitions, ON_part_adjacency; set_connection = nothing)
     for part_i in 1:num_partitions
         for part_j in 1:num_partitions
+            # self loops in the OTN
             if part_i == part_j
                 continue
             end
             
-            V_rec[(part_i-1)*k+1:part_i*k,(part_j-1)*k+1:part_j*k] .= 0.0
+            if part_i != part_j
+                V_rec[(part_i-1)*k+1:part_i*k,(part_j-1)*k+1:part_j*k] .= 0.0
+            end
             
             if ON_part_adjacency[part_i,part_j] > 0
                 for i in 1:k
-                    V_rec[(part_i-1)*k+i,(part_j-1)*k+i] = ON_part_adjacency[part_i, part_j]
+                    if set_connection == nothing
+                        V_rec[(part_i-1)*k+i,(part_j-1)*k+i] = ON_part_adjacency[part_i, part_j]
+                    else
+                        V_rec[(part_i-1)*k+i,(part_j-1)*k+i] = set_connection
+                    end
                 end
             end
         end
@@ -68,15 +75,19 @@ function mask_adjacency!(V_rec, k, num_partitions, ON_part_adjacency)
 end
 
 
-
-
-function create_ESN(k, d, ρ; num_partitions=1, ON_part_adjacency=nothing)
+function create_ESN(k, d, ρ; num_partitions=1, ON_part_adjacency=nothing, set_connection=nothing)
     V_in = randn(k*num_partitions)
     
-    V_rec = erdos_renyi_adjacency(k*num_partitions, d)
+    V_rec = erdos_renyi_adjacency(k*num_partitions, d*num_partitions)
+    # println("The prescribed d is ", d)
+    # println("The resulting d is ", sum([sum(V_rec[1+k*i:k+k*i, 1+k*i:k+k*i] .> 0)/k for i in 0:(num_partitions-1)])/num_partitions)
+    # return()
+
+    # Rescale adjacency to be only as large as largest weight
+    ON_part_adjacency = ON_part_adjacency/maximum(ON_part_adjacency)*maximum(V_rec)
     
     if ON_part_adjacency != nothing
-        mask_adjacency!(V_rec, k, num_partitions, ON_part_adjacency)
+        mask_adjacency!(V_rec, k, num_partitions, ON_part_adjacency, set_connection=set_connection)
     end
     
     max_abs_ev = maximum(abs.(eigen(V_rec).values))
@@ -174,9 +185,10 @@ function train_one_step_pred(x, ESN_params; partition_symbols=nothing)
     target_z = x[2:length(x)]
     predicted_states = states[1:size(states)[1]-1,:]
 
-    if partition_symbols != nothing
-        mask_states!(predicted_states, partition_symbols, ESN_params.k, ESN_params.num_partitions)
-    end
+    # don't mask the states before readout
+    # if partition_symbols != nothing
+    #     mask_states!(predicted_states, partition_symbols, ESN_params.k, ESN_params.num_partitions)
+    # end
     
     R = ridge_regression(target_z, predicted_states, ESN_params.β)
     
@@ -186,9 +198,10 @@ end
 function one_step_pred(x, ESN_params, R; S = nothing, partition_symbols=nothing)
     states = run_ESN(x, ESN_params; S = S, partition_symbols=partition_symbols)
 
-    if partition_symbols != nothing
-        mask_states!(states, partition_symbols, ESN_params.k, ESN_params.num_partitions)
-    end
+    # don't mask the states before readout
+    # if partition_symbols != nothing
+    #     mask_states!(states, partition_symbols, ESN_params.k, ESN_params.num_partitions)
+    # end
 
     preds = states*R
     
