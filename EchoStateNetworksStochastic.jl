@@ -45,6 +45,27 @@ function randomly_mask_V_rec_for_partition(V_rec, partition_symbol, k, num_parti
     return(masked_V_rec)
 end
 
+function randomly_mask_V_rec(V_rec, k, num_partitions, ON_part_adjacency)
+    masked_V_rec = copy(V_rec)
+    
+    for i in 1:num_partitions
+        # for each partition, choose a partition to transmit based on ON_part_adjacency
+        cumulative_probs = cumsum(ON_part_adjacency[i, :])
+        r = rand()
+        chosen_partition = findfirst(p -> r <= p, cumulative_probs)
+
+        for j in 1:num_partitions
+            if i == j || j == chosen_partition
+                continue
+            end
+
+            masked_V_rec[(i-1)*k + 1:i*k, (j-1)*k + 1:j*k] .= 0
+        end
+    end
+
+    return(masked_V_rec)
+end
+
 function run_ESN(x, ESN_params; S = nothing, partition_symbols = nothing, ON_part_adjacency = nothing)
     if S == nothing
         S = randn(ESN_params.k*ESN_params.num_partitions)
@@ -64,17 +85,12 @@ function run_ESN(x, ESN_params; S = nothing, partition_symbols = nothing, ON_par
                 continue
             end
             masked_V_in = mask_V_in_for_partition(ESN_params.V_in, partition_symbols[t], ESN_params.k, ESN_params.num_partitions)
+
+            # mask V_rec based on transition probabilities
+            # masked_V_rec = randomly_mask_V_rec_for_partition(ESN_params.V_rec, partition_symbols[t], ESN_params.k, ESN_params.num_partitions, ON_part_adjacency)
+            masked_V_rec = randomly_mask_V_rec(ESN_params.V_rec, ESN_params.k, ESN_params.num_partitions, ON_part_adjacency)
         else
             masked_V_in = ESN_params.V_in
-        end
-
-        if partition_symbols != nothing
-            if partition_symbols[t] == nothing
-                continue
-            end
-            # mask V_rec based on transition probabilities
-            masked_V_rec = randomly_mask_V_rec_for_partition(ESN_params.V_rec, partition_symbols[t], ESN_params.k, ESN_params.num_partitions, ON_part_adjacency)
-        else
             masked_V_rec = ESN_params.V_rec
         end
         
