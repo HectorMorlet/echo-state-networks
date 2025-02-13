@@ -93,6 +93,10 @@ function run_ESN(x, ESN_params; S = nothing, partition_symbols = nothing, ON_par
             masked_V_in = ESN_params.V_in
             masked_V_rec = ESN_params.V_rec
         end
+
+        max_abs_ev = maximum(abs.(eigen(masked_V_rec).values))
+        masked_V_rec = masked_V_rec * (ESN_params.ρ / max_abs_ev)
+        println(t)
         
         S = (1 − ESN_params.α)*S + ESN_params.α*tanh.(
             ESN_params.η*masked_V_in*x[t] + masked_V_rec*S + ESN_params.V_bias)

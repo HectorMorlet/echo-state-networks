@@ -15,12 +15,13 @@ struct ESNParameters
     α::Float64
     η::Float64
     β::Float64
+    ρ::Float64
     num_partitions::Int64 # this is the number of partitions
 end
 
 function create_ESN_params(k, d, ρ, α, η, β; num_partitions=1, ON_part_adjacency=nothing, ON_part_set_connection=nothing)
     V_in, V_rec, V_bias = create_ESN(k, d, ρ, num_partitions=num_partitions, ON_part_adjacency=ON_part_adjacency, set_connection=ON_part_set_connection)
-    ESN_params = ESNParameters(V_in, V_rec, V_bias, k, α, η, β, num_partitions)
+    ESN_params = ESNParameters(V_in, V_rec, V_bias, k, α, η, β, ρ, num_partitions)
     
     return(ESN_params)
 end
