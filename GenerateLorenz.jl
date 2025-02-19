@@ -5,7 +5,7 @@ init_conds = [-15.0,-15.0,10.0]
 lo_variables = [10, 8/3, 28]
 init_time_to_ignore = 10
 total_time = 500
-time_delta = 0.05
+time_delta = 0.01
 
 function Lorenz(u, p, t)
     σ = p[1]

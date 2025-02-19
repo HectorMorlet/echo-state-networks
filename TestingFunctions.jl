@@ -17,7 +17,7 @@ function RMSE(y_true, y_pred)
     return sqrt(mean((y_true .- y_pred) .^ 2))
 end
 
-function compare_preds(lo_test, ON_preds, vanilla_preds, x_start, x_end; calculate_error=true, ignore_first=0, offset=1)
+function compare_preds(lo_test, ON_preds, vanilla_preds, x_start, x_end; calculate_error=true, ignore_first=0, offset=1, mark_every=0)
     ON_preds_cropped = ON_preds[ignore_first+1:end]
     vanilla_preds_cropped = vanilla_preds[ignore_first+1:min(length(ON_preds), end)]
     lo_test_cropped = lo_test[offset+ignore_first+1:min(length(ON_preds_cropped)+offset+ignore_first, end)]
@@ -34,16 +34,21 @@ function compare_preds(lo_test, ON_preds, vanilla_preds, x_start, x_end; calcula
     ax1 = Axis(fig[1,1])
     lines!(ax1, ON_preds_cropped; linewidth = 1.0, color = Cycled(1))
     lines!(ax1, lo_test_cropped; linewidth = 1.0, color = Cycled(2))
-
-    xlims!(x_start,x_end)
-    ylims!(-25,25)
+    if mark_every != 0
+        vlines!(ax1, x_start:mark_every:x_end; color=:gray, alpha=0.5)
+    end
 
     ax2 = Axis(fig[1,2])
     lines!(ax2, vanilla_preds_cropped; linewidth = 1.0, color = Cycled(1))
     lines!(ax2, lo_test_cropped; linewidth = 1.0, color = Cycled(2))
+    if mark_every != 0
+        vlines!(ax2, x_start:mark_every:x_end; color=:gray, alpha=0.5)
+    end
 
-    xlims!(x_start,x_end)
-    ylims!(-25,25)
+    xlims!(ax1, x_start,x_end)
+    ylims!(ax1, -25,25)
+    xlims!(ax2, x_start,x_end)
+    ylims!(ax2, -25,25)
 
     fig
 end
@@ -127,19 +132,28 @@ function create_pred_for_params_multi_step(lo_train, lo_test, m, chunk_length; k
 
         chunk_i += chunk_length
 
-        if chunk_i <= length(lo_test)
-            pred = lo_test[chunk_i]
-            state = test_states[chunk_i, :]
-            part_symbol = part_symbols_test[chunk_i]
-            if chunk_i-((m-1)*τ+1) > 0
-                partition_window = lo_test[chunk_i-((m-1)*τ+1):chunk_i]
-            else
-                partition_window = [lo_train[end-((m-1)*τ+1)+chunk_i:end]; lo_test[1:chunk_i]]
-            end
+        pred = lo_test[chunk_i]
+        state = test_states[chunk_i, :]
+        part_symbol = part_symbols_test[chunk_i]
+        if chunk_i-((m-1)*τ+1) > 0
+            partition_window = lo_test[chunk_i-((m-1)*τ+1):chunk_i]
+        else
+            partition_window = [lo_train[end-((m-1)*τ+1)+chunk_i:end]; lo_test[1:chunk_i]]
         end
     end
     
     return preds
+end
+
+function test_multi_step(lo_train, lo_test, m, layer_k; n_steps=5, from=0, to=100, equal_total_k=true)
+    ON_preds_multistep = create_pred_for_params_multi_step(lo_train, lo_test, 3, n_steps; k = layer_k)
+    if equal_total_k
+        vanilla_k = layer_k*m
+    else
+        vanilla_k = layer_k        
+    end
+    vanilla_preds_multistep = create_pred_for_params_multi_step(lo_train, lo_test, 1, n_steps; k = vanilla_k)
+    compare_preds(lo_test, ON_preds_multistep, vanilla_preds_multistep, from, to, offset=0, mark_every=n_steps)
 end
 
 end
