@@ -10,37 +10,39 @@ using .EchoStateNetworks
 include("TurningError.jl")
 using .TurningError
 
-export compare_preds, create_pred_for_params_single_step, create_pred_for_params_free_run, create_pred_for_params_multi_step, find_ordinal_partition_symbol, get_starting_state_and_R
+export compare_preds, create_pred_for_params_single_step, create_pred_for_params_free_run, create_pred_for_params_multi_step, test_multi_step, test_multi_step_multi_trial, graph_multi_step_RMSE_vs_n_steps
 # TODO remove the last two functions
 
 function RMSE(y_true, y_pred)
     return sqrt(mean((y_true .- y_pred) .^ 2))
 end
 
-function compare_preds(lo_test, ON_preds, vanilla_preds, x_start, x_end; calculate_error=true, ignore_first=0, offset=1, mark_every=0)
+function compare_preds(lo_test, vanilla_preds, ON_preds, x_start, x_end; calculate_error=true, ignore_first=0, offset=0, mark_every=0)
     ON_preds_cropped = ON_preds[ignore_first+1:end]
     vanilla_preds_cropped = vanilla_preds[ignore_first+1:min(length(ON_preds), end)]
     lo_test_cropped = lo_test[offset+ignore_first+1:min(length(ON_preds_cropped)+offset+ignore_first, end)]
 
     if calculate_error
-        println("Ordinal network reservoir prediction RMSE: ", RMSE(ON_preds_cropped, lo_test_cropped))
-        println("Vanilla prediction RMSE: ", RMSE(vanilla_preds_cropped, lo_test_cropped))
-        println("Ordinal network reservoir prediction turning partition RMSE: ", turning_partition_RMSE(ON_preds_cropped, lo_test_cropped))
-        println("Vanilla prediction turning partition RMSE: ", turning_partition_RMSE(vanilla_preds_cropped, lo_test_cropped))
+        println("Overall RMSE:")
+        println("    Vanilla: ", RMSE(vanilla_preds_cropped, lo_test_cropped))
+        println("    Ordinal network reservoir: ", RMSE(ON_preds_cropped, lo_test_cropped))
+        println("Turning partition RMSE:")
+        println("    Vanilla: ", turning_partition_RMSE(vanilla_preds_cropped, lo_test_cropped))
+        println("    Ordinal network reservoir: ", turning_partition_RMSE(ON_preds_cropped, lo_test_cropped))
     end
 
     fig = Figure( size = (1200,600))
 
-    ax1 = Axis(fig[1,1])
-    lines!(ax1, ON_preds_cropped; linewidth = 1.0, color = Cycled(1))
-    lines!(ax1, lo_test_cropped; linewidth = 1.0, color = Cycled(2))
+    ax1 = Axis(fig[1,1], title="Vanilla")
+    lines!(ax1, vanilla_preds_cropped; linewidth = 1.0, color = :blue)
+    lines!(ax1, lo_test_cropped; linewidth = 1.0, color = :yellow)
     if mark_every != 0
         vlines!(ax1, x_start:mark_every:x_end; color=:gray, alpha=0.5)
     end
 
-    ax2 = Axis(fig[1,2])
-    lines!(ax2, vanilla_preds_cropped; linewidth = 1.0, color = Cycled(1))
-    lines!(ax2, lo_test_cropped; linewidth = 1.0, color = Cycled(2))
+    ax2 = Axis(fig[1,2], title="Ordinal Network")
+    lines!(ax2, ON_preds_cropped; linewidth = 1.0, color = :red)
+    lines!(ax2, lo_test_cropped; linewidth = 1.0, color = :yellow)
     if mark_every != 0
         vlines!(ax2, x_start:mark_every:x_end; color=:gray, alpha=0.5)
     end
@@ -145,7 +147,7 @@ function create_pred_for_params_multi_step(lo_train, lo_test, m, chunk_length; k
     return preds
 end
 
-function test_multi_step(lo_train, lo_test, m, layer_k; n_steps=5, from=0, to=100, equal_total_k=true)
+function test_multi_step(lo_train, lo_test, m, layer_k; n_steps=5, from=0, to=100, equal_total_k=true, ignore_first=100)
     ON_preds_multistep = create_pred_for_params_multi_step(lo_train, lo_test, 3, n_steps; k = layer_k)
     if equal_total_k
         vanilla_k = layer_k*m
@@ -153,7 +155,80 @@ function test_multi_step(lo_train, lo_test, m, layer_k; n_steps=5, from=0, to=10
         vanilla_k = layer_k        
     end
     vanilla_preds_multistep = create_pred_for_params_multi_step(lo_train, lo_test, 1, n_steps; k = vanilla_k)
-    compare_preds(lo_test, ON_preds_multistep, vanilla_preds_multistep, from, to, offset=0, mark_every=n_steps)
+    compare_preds(lo_test, ON_preds_multistep, vanilla_preds_multistep, from, to, offset=0, mark_every=n_steps, ignore_first=ignore_first)
+end
+
+function test_multi_step_multi_trial(lo_train, lo_test, m, layer_k; n_steps=5, equal_total_k=true, ignore_first=100, trials=10, verbose=true)
+    vanilla_RMSEs, ON_network_RMSEs, vanilla_turning_RMSEs, ON_network_turning_RMSEs = [], [], [], []
+
+    for i in 1:trials
+        ON_preds = create_pred_for_params_multi_step(lo_train, lo_test, 3, n_steps; k = layer_k)
+        if equal_total_k
+            vanilla_k = layer_k*m
+        else
+            vanilla_k = layer_k        
+        end
+        vanilla_preds = create_pred_for_params_multi_step(lo_train, lo_test, 1, n_steps; k = vanilla_k)
+
+        ON_preds_cropped = ON_preds[ignore_first+1:end]
+        vanilla_preds_cropped = vanilla_preds[ignore_first+1:min(length(ON_preds), end)]
+        lo_test_cropped = lo_test[ignore_first+1:min(length(ON_preds_cropped)+ignore_first, end)]
+
+        push!(vanilla_RMSEs, RMSE(vanilla_preds_cropped, lo_test_cropped))
+        push!(ON_network_RMSEs, RMSE(ON_preds_cropped, lo_test_cropped))
+        push!(vanilla_turning_RMSEs, turning_partition_RMSE(vanilla_preds_cropped, lo_test_cropped))
+        push!(ON_network_turning_RMSEs, turning_partition_RMSE(ON_preds_cropped, lo_test_cropped))
+    end
+
+    if verbose
+        println("Mean Vanilla RMSE: ", mean(vanilla_RMSEs))
+        println("Mean ON Network RMSE: ", mean(ON_network_RMSEs))
+        println("Mean Vanilla Turning RMSE: ", mean(vanilla_turning_RMSEs))
+        println("Mean ON Network Turning RMSE: ", mean(ON_network_turning_RMSEs))
+    end
+
+    if !verbose
+        return(
+            mean(vanilla_RMSEs),
+            mean(ON_network_RMSEs),
+            mean(vanilla_turning_RMSEs),
+            mean(ON_network_turning_RMSEs)
+        )
+    end
+end
+
+function graph_multi_step_RMSE_vs_n_steps(lo_train, lo_test, n_step_trials, m, layer_k; equal_total_k=true, ignore_first=100, trials=10)
+    vanilla_RMSEs, ON_network_RMSEs, vanilla_turning_RMSEs, ON_network_turning_RMSEs = [], [], [], []
+    i = 1
+    for n_steps in n_step_trials
+        println(i, "/", length(n_step_trials), " - Testing multi-step with ", n_steps, " steps.")
+
+        vanilla_RMSE, ON_network_RMSE, vanilla_turning_RMSE, ON_network_turning_RMSE = test_multi_step_multi_trial(lo_train, lo_test, m, layer_k; n_steps=n_steps, equal_total_k=equal_total_k, ignore_first=ignore_first, trials=trials, verbose=false)
+        push!(vanilla_RMSEs, vanilla_RMSE)
+        push!(ON_network_RMSEs, ON_network_RMSE)
+        push!(vanilla_turning_RMSEs, vanilla_turning_RMSE)
+        push!(ON_network_turning_RMSEs, ON_network_turning_RMSE)
+
+        i += 1
+    end
+
+    fig = Figure(size=(800, 600))
+    ax = Axis(fig[1,1], 
+        xlabel="Number of Steps", 
+        ylabel="RMSE",
+        title="RMSE vs Prediction Steps")
+
+    # Plot vanilla RMSEs in blues
+    lines!(ax, n_step_trials, vanilla_RMSEs, color=:royalblue, label="Vanilla RMSE")
+    lines!(ax, n_step_trials, vanilla_turning_RMSEs, color=:lightblue, label="Vanilla Turning RMSE")
+
+    # Plot ON network RMSEs in reds  
+    lines!(ax, n_step_trials, ON_network_RMSEs, color=:darkred, label="ON Network RMSE")
+    lines!(ax, n_step_trials, ON_network_turning_RMSEs, color=:lightcoral, label="ON Network Turning RMSE")
+
+    axislegend(position=(:right, :bottom))
+    
+    fig
 end
 
 end
