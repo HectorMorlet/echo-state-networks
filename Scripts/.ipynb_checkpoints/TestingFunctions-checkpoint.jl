@@ -11,9 +11,19 @@ include("EchoStateNetworks.jl")
 using .EchoStateNetworks
 include("TurningError.jl")
 using .TurningError
+include("EchoStateNetworksStochastic.jl")
+using .EchoStateNetworksStochastic
 
-export compare_preds, create_pred_for_params_single_step, create_pred_for_params_free_run, create_pred_for_params_multi_step, test_multi_step, test_multi_step_multi_trial, graph_multi_step_RMSE_vs_n_steps, test_single_step, test_freerun
-# TODO remove the last two functions
+export TestingParameters, create_testing_params, compare_preds, create_pred_for_params_single_step, create_pred_for_params_free_run, create_pred_for_params_multi_step, test_multi_step, test_multi_step_multi_trial, graph_multi_step_RMSE_vs_n_steps, test_single_step, test_freerun
+
+struct TestingParameters
+    mask_states_b4_readout::Bool
+    stochastic::Bool
+end
+
+function create_testing_params(;mask_states_b4_readout=false, stochastic=false)
+    return(TestingParameters(mask_states_b4_readout, stochastic))
+end
 
 function RMSE(y_true, y_pred)
     return sqrt(mean((y_true .- y_pred) .^ 2))
@@ -57,7 +67,7 @@ function compare_preds(lo_test, vanilla_preds, ON_preds, x_start, x_end; calcula
     fig
 end
 
-function get_starting_state_and_R(lo_train, m, k, d, ρ, α, η, β, w, τ; mask_states_b4_readout=false)
+function get_starting_state_and_R(lo_train, m, k, d, ρ, α, η, β, w, τ; testing_params=create_testing_params())
     #if m > 1
     part_symbols_train, unique_partitions_train = create_ordinal_partition(lo_train, m, w, τ)
     trans_adjacency_matrix = create_transition_matrix(part_symbols_train)
@@ -72,13 +82,17 @@ function get_starting_state_and_R(lo_train, m, k, d, ρ, α, η, β, w, τ; mask
 
     ESN_params = create_ESN_params(k, d, ρ, α, η, β, num_partitions=num_partitions, ON_part_adjacency=trans_adjacency_matrix)
 
-    R, train_states = train_one_step_pred(lo_train, ESN_params, partition_symbols=part_symbols_train, mask_states_b4_readout=mask_states_b4_readout)
+    if testing_params.stochastic
+        R, train_states = train_one_step_pred_stochastic(lo_train, ESN_params, partition_symbols=part_symbols_train, ON_part_adjacency=trans_adjacency_matrix)
+    else
+        R, train_states = train_one_step_pred(lo_train, ESN_params, partition_symbols=part_symbols_train, mask_states_b4_readout=testing_params.mask_states_b4_readout)
+    end
 
-    return(R, train_states[end,:], unique_partitions_train, ESN_params, part_symbols_train[end])
+    return(R, train_states[end,:], unique_partitions_train, ESN_params, part_symbols_train[end], trans_adjacency_matrix)
 end
 
 function create_pred_for_params_single_step(lo_train, lo_test, m; k = 100, part_connection=0.5, d = k*0.05, ρ = 1.2, α = 1.0, η = 1/maximum(lo_train), β = 0.001, w = 1, τ = 2, return_num_partitions = false, mask_states_b4_readout=false)
-    R, starting_state, unique_partitions_train, ESN_params, _ = get_starting_state_and_R(lo_train, m, k, d, ρ, α, η, β, w, τ)
+    R, starting_state, unique_partitions_train, ESN_params, _, _ = get_starting_state_and_R(lo_train, m, k, d, ρ, α, η, β, w, τ)
 
     println("Created reservoir of size: ", size(starting_state))
 
@@ -108,7 +122,7 @@ function find_ordinal_partition_symbol(partition_window, m, τ, unique_partition
 end
 
 function create_pred_for_params_free_run(lo_train, num_test_steps, m; k = 100, d = k*0.05, ρ = 1.1, α = 1.0, η = 1/maximum(lo_train), β = 0.001, w = 1, τ = 1, return_num_partitions=false, mask_states_b4_readout=false)
-    R, starting_state, unique_partitions_train, ESN_params, starting_part_symbol = get_starting_state_and_R(lo_train, m, k, d, ρ, α, η, β, w, τ)
+    R, starting_state, unique_partitions_train, ESN_params, starting_part_symbol, _ = get_starting_state_and_R(lo_train, m, k, d, ρ, α, η, β, w, τ)
     
     println("Created reservoir of size: ", size(starting_state))
 
@@ -140,13 +154,17 @@ function test_freerun(lo_train, lo_test, m, k; from=0, to=100, equal_total_k=tru
     compare_preds(lo_test, vanilla_preds, ON_preds, from, to, calculate_error=false)
 end
 
-function create_pred_for_params_multi_step(lo_train, lo_test, m, chunk_length; k = 100, d = k*0.05, ρ = 1.1, α = 1.0, η = 1/maximum(lo_train), β = 0.001, w = 1, τ = 1, return_num_partitions=false, mask_states_b4_readout=false)
-    R, starting_state, unique_partitions_train, ESN_params, starting_part_symbol = get_starting_state_and_R(lo_train, m, k, d, ρ, α, η, β, w, τ, mask_states_b4_readout=mask_states_b4_readout)
+function create_pred_for_params_multi_step(lo_train, lo_test, m, chunk_length; k = 100, d = k*0.05, ρ = 1.1, α = 1.0, η = 1/maximum(lo_train), β = 0.001, w = 1, τ = 1, return_num_partitions=false, testing_params=create_testing_params())
+    R, starting_state, unique_partitions_train, ESN_params, starting_part_symbol, ON_part_adjacency = get_starting_state_and_R(lo_train, m, k, d, ρ, α, η, β, w, τ, testing_params=testing_params)
     
     println("Created reservoir of size: ", size(starting_state))
     
     part_symbols_test, unique_partitions_test = create_ordinal_partition(lo_test, m, w, τ, unique_partitions=unique_partitions_train)
-    _, test_states = one_step_pred(lo_test, ESN_params, R, S=starting_state, partition_symbols=part_symbols_test, mask_states_b4_readout=mask_states_b4_readout)
+    if testing_params.stochastic
+        _, test_states = one_step_pred_stochastic(lo_test, ESN_params, R, S=starting_state, partition_symbols=part_symbols_test, ON_part_adjacency=ON_part_adjacency)
+    else
+        _, test_states = one_step_pred(lo_test, ESN_params, R, S=starting_state, partition_symbols=part_symbols_test, mask_states_b4_readout=testing_params.mask_states_b4_readout)
+    end
 
     preds = []
 
@@ -158,7 +176,12 @@ function create_pred_for_params_multi_step(lo_train, lo_test, m, chunk_length; k
     chunk_i = 0
     while chunk_i+chunk_length <= length(lo_test)
         for _ in 1:chunk_length
-            pred, state = one_step_pred(pred, ESN_params, R, S = state, partition_symbols=part_symbol, mask_states_b4_readout=mask_states_b4_readout)
+            if testing_params.stochastic
+                pred, state = one_step_pred_stochastic(pred, ESN_params, R, S = state, partition_symbols=part_symbol, ON_part_adjacency=ON_part_adjacency)
+            else
+                pred, state = one_step_pred(pred, ESN_params, R, S = state, partition_symbols=part_symbol, mask_states_b4_readout=testing_params.mask_states_b4_readout)
+            end
+            
             pred = pred[1]
             state = state[end,:]
             partition_window = [partition_window[2:end]; pred]
@@ -193,11 +216,12 @@ function test_multi_step(lo_train, lo_test, m, layer_k; n_steps=5, from=0, to=10
     compare_preds(lo_test, ON_preds_multistep, vanilla_preds_multistep, from, to, offset=0, mark_every=n_steps, ignore_first=ignore_first)
 end
 
-function test_multi_step_multi_trial(lo_train, lo_test, m, layer_k; n_steps=5, equal_total_k=true, ignore_first=100, trials=10, verbose=true, mask_states_b4_readout=false)
+function test_multi_step_multi_trial(lo_train, lo_test, m, layer_k; n_steps=5, equal_total_k=true, ignore_first=100, trials=10, verbose=true, testing_params=create_testing_params())
     vanilla_RMSEs, ON_network_RMSEs, vanilla_turning_RMSEs, ON_network_turning_RMSEs = [], [], [], []
 
     for i in 1:trials
-        ON_preds, num_partitions = create_pred_for_params_multi_step(lo_train, lo_test, 3, n_steps; k = layer_k, return_num_partitions=true, mask_states_b4_readout=mask_states_b4_readout)
+        println("Trial ", i, " of ", trials)
+        ON_preds, num_partitions = create_pred_for_params_multi_step(lo_train, lo_test, 3, n_steps; k = layer_k, return_num_partitions=true, testing_params=testing_params)
         if equal_total_k
             vanilla_k = layer_k*num_partitions
         else
@@ -232,11 +256,11 @@ function test_multi_step_multi_trial(lo_train, lo_test, m, layer_k; n_steps=5, e
     end
 end
 
-function graph_multi_step_RMSE_vs_n_steps(lo_train, lo_test, n_step_trials, m, layer_k; equal_total_k=true, ignore_first=100, trials=10, mask_states_b4_readout=false)
+function graph_multi_step_RMSE_vs_n_steps(lo_train, lo_test, n_step_trials, m, layer_k; equal_total_k=true, ignore_first=100, trials=10, testing_params=create_testing_params())
     vanilla_RMSEs, ON_network_RMSEs, vanilla_turning_RMSEs, ON_network_turning_RMSEs = [], [], [], []
     i = 1
     for n_steps in n_step_trials
-        vanilla_RMSE, ON_network_RMSE, vanilla_turning_RMSE, ON_network_turning_RMSE = test_multi_step_multi_trial(lo_train, lo_test, m, layer_k; n_steps=n_steps, equal_total_k=equal_total_k, ignore_first=ignore_first, trials=trials, verbose=false, mask_states_b4_readout=mask_states_b4_readout)
+        vanilla_RMSE, ON_network_RMSE, vanilla_turning_RMSE, ON_network_turning_RMSE = test_multi_step_multi_trial(lo_train, lo_test, m, layer_k; n_steps=n_steps, equal_total_k=equal_total_k, ignore_first=ignore_first, trials=trials, verbose=false, testing_params=testing_params)
         push!(vanilla_RMSEs, vanilla_RMSE)
         push!(ON_network_RMSEs, ON_network_RMSE)
         push!(vanilla_turning_RMSEs, vanilla_turning_RMSE)

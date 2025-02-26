@@ -1,24 +1,13 @@
-include("EchoStateNetworks.jl")
-
 module EchoStateNetworksStochastic
 
-using ..EchoStateNetworks
 using LinearAlgebra
 
-export ESNParameters, create_ESN_params, train_one_step_pred, one_step_pred, mask_states!, mask_V_in_for_partition, run_ESN
+include("../Scripts/EchoStateNetworks.jl")
+using .EchoStateNetworks
+include("StandardFunctions.jl")
+using .StandardFunctions
 
-# Extend the base ESN parameters to include stochastic components
-# struct StochasticESNParameters <: ESNParameters
-#     V_in::Vector{Float64}
-#     V_rec::Matrix{Float64} 
-#     V_bias::Vector{Float64}
-#     k::Int64
-#     α::Float64
-#     η::Float64
-#     β::Float64
-#     num_partitions::Int64
-#     noise_amplitude::Float64  # Additional parameter for stochastic behavior
-# end
+export train_one_step_pred_stochastic, one_step_pred_stochastic, run_ESN_stochastic
 
 function randomly_mask_V_rec_for_partition(V_rec, partition_symbol, k, num_partitions, ON_part_adjacency)
     cumulative_probs = cumsum(ON_part_adjacency[partition_symbol, :])
@@ -66,7 +55,7 @@ function randomly_mask_V_rec(V_rec, k, num_partitions, ON_part_adjacency)
     return(masked_V_rec)
 end
 
-function run_ESN(x, ESN_params; S = nothing, partition_symbols = nothing, ON_part_adjacency = nothing)
+function run_ESN_stochastic(x, ESN_params; S = nothing, partition_symbols = nothing, ON_part_adjacency = nothing)
     if S == nothing
         S = randn(ESN_params.k*ESN_params.num_partitions)
     end
@@ -94,9 +83,11 @@ function run_ESN(x, ESN_params; S = nothing, partition_symbols = nothing, ON_par
             masked_V_rec = ESN_params.V_rec
         end
 
-        max_abs_ev = maximum(abs.(eigen(masked_V_rec).values))
-        masked_V_rec = masked_V_rec * (ESN_params.ρ / max_abs_ev)
-        println(t)
+        rescale_ρ = false
+        if rescale_ρ
+            max_abs_ev = maximum(abs.(eigen(masked_V_rec).values))
+            masked_V_rec = masked_V_rec * (ESN_params.ρ / max_abs_ev)
+        end
         
         S = (1 − ESN_params.α)*S + ESN_params.α*tanh.(
             ESN_params.η*masked_V_in*x[t] + masked_V_rec*S + ESN_params.V_bias)
@@ -106,26 +97,8 @@ function run_ESN(x, ESN_params; S = nothing, partition_symbols = nothing, ON_par
     return(states')
 end
 
-
-# do I really need to have this function? The only changed function is run_ESN
-function ridge_regression(x::Vector, states::Matrix, beta::Float64)
-    # Ensure states is a matrix and x is a vector
-    @assert size(states, 1) == length(x)
-    
-    # Compute the number of features
-    n_features = size(states, 2)
-    
-    # Compute the identity matrix of size n_features
-    I_test = Matrix{Float64}(I, n_features, n_features)
-    
-    # Compute the Ridge regression solution
-    R = (states' * states + beta * I_test) \ (states' * x)
-    
-    return R
-end
-
-function train_one_step_pred(x, ESN_params; partition_symbols=nothing, ON_part_adjacency=nothing)
-    states = run_ESN(x, ESN_params; partition_symbols=partition_symbols, ON_part_adjacency=ON_part_adjacency)
+function train_one_step_pred_stochastic(x, ESN_params; partition_symbols=nothing, ON_part_adjacency=nothing)
+    states = run_ESN_stochastic(x, ESN_params; partition_symbols=partition_symbols, ON_part_adjacency=ON_part_adjacency)
     
     target_z = x[2:length(x)]
     predicted_states = states[1:size(states)[1]-1,:]
@@ -140,8 +113,8 @@ function train_one_step_pred(x, ESN_params; partition_symbols=nothing, ON_part_a
     return(R, states)
 end
 
-function one_step_pred(x, ESN_params, R; S = nothing, partition_symbols=nothing, ON_part_adjacency=nothing)
-    states = run_ESN(x, ESN_params; S = S, partition_symbols=partition_symbols, ON_part_adjacency=ON_part_adjacency)
+function one_step_pred_stochastic(x, ESN_params, R; S = nothing, partition_symbols=nothing, ON_part_adjacency=nothing)
+    states = run_ESN_stochastic(x, ESN_params; S = S, partition_symbols=partition_symbols, ON_part_adjacency=ON_part_adjacency)
 
     # don't mask the states before readout
     # if partition_symbols != nothing

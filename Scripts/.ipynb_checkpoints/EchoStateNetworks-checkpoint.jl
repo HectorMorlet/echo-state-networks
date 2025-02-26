@@ -5,6 +5,9 @@ greet() = print("EchoStateNetworks module... TODO greeting here.")
 using SparseArrays
 using LinearAlgebra
 
+include("StandardFunctions.jl")
+using .StandardFunctions
+
 export ESNParameters, create_ESN_params, train_one_step_pred, one_step_pred, mask_states!, mask_V_in_for_partition, run_ESN#remove last two
 
 struct ESNParameters
@@ -144,28 +147,6 @@ function run_ESN(x, ESN_params; S = nothing, partition_symbols = nothing)
     end
     
     return(states')
-end
-
-# Example usage
-# states = [1.0 2.0; 3.0 4.0; 5.0 6.0]
-# x = [1.0, 2.0, 3.0]
-# lambda = 0.1
-
-# R = ridge_regression(x, states, lambda)
-function ridge_regression(x::Vector, states::Matrix, beta::Float64)
-    # Ensure states is a matrix and x is a vector
-    @assert size(states, 1) == length(x)
-    
-    # Compute the number of features
-    n_features = size(states, 2)
-    
-    # Compute the identity matrix of size n_features
-    I_test = Matrix{Float64}(I, n_features, n_features)
-    
-    # Compute the Ridge regression solution
-    R = (states' * states + beta * I_test) \ (states' * x)
-    
-    return R
 end
 
 function mask_states!(states, partition_symbols, k, num_partitions)
