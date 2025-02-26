@@ -209,11 +209,11 @@ function create_pred_for_params_multi_step(lo_train, lo_test, m, chunk_length; k
     end
 end
 
-function test_multi_step(lo_train, lo_test, m, layer_k; n_steps=5, from=0, to=100, equal_total_k=true, ignore_first=100)
-    ON_preds_multistep, num_partitions = create_pred_for_params_multi_step(lo_train, lo_test, 3, n_steps; k = layer_k, return_num_partitions=true)
+function test_multi_step(lo_train, lo_test, m, layer_k; n_steps=5, from=0, to=100, equal_total_k=true, ignore_first=100, testing_params=create_testing_params())
+    ON_preds_multistep, num_partitions = create_pred_for_params_multi_step(lo_train, lo_test, 3, n_steps; k = layer_k, return_num_partitions=true, testing_params=testing_params)
     vanilla_k = equal_total_k ? layer_k*num_partitions : layer_k
     vanilla_preds_multistep = create_pred_for_params_multi_step(lo_train, lo_test, 1, n_steps; k = vanilla_k)
-    compare_preds(lo_test, ON_preds_multistep, vanilla_preds_multistep, from, to, offset=0, mark_every=n_steps, ignore_first=ignore_first)
+    compare_preds(lo_test, vanilla_preds_multistep, ON_preds_multistep, from, to, offset=0, mark_every=n_steps, ignore_first=ignore_first)
 end
 
 function test_multi_step_multi_trial(lo_train, lo_test, m, layer_k; n_steps=5, equal_total_k=true, ignore_first=100, trials=10, verbose=true, testing_params=create_testing_params())

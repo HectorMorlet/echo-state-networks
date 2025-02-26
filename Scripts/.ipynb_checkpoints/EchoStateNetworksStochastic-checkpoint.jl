@@ -60,6 +60,7 @@ function run_ESN_stochastic(x, ESN_params; S = nothing, partition_symbols = noth
         S = randn(ESN_params.k*ESN_params.num_partitions)
     end
 
+    # i.e. if we are doing the layered ESN (which requires partition_symbols) then we need the adjacency network for the stochastic network to function
     @assert (partition_symbols === nothing || ON_part_adjacency !== nothing)
     
     states = zeros(Float64, ESN_params.k*ESN_params.num_partitions, length(x))
