@@ -19,10 +19,11 @@ export TestingParameters, create_testing_params, compare_preds, create_pred_for_
 struct TestingParameters
     mask_states_b4_readout::Bool
     stochastic::Bool
+    stochastic_rescale_V_rec::Bool
 end
 
-function create_testing_params(;mask_states_b4_readout=false, stochastic=false)
-    return(TestingParameters(mask_states_b4_readout, stochastic))
+function create_testing_params(;mask_states_b4_readout=false, stochastic=false, stochastic_rescale_V_rec=false)
+    return(TestingParameters(mask_states_b4_readout, stochastic, stochastic_rescale_V_rec))
 end
 
 function RMSE(y_true, y_pred)
@@ -161,7 +162,7 @@ function create_pred_for_params_multi_step(lo_train, lo_test, m, chunk_length; k
     
     part_symbols_test, unique_partitions_test = create_ordinal_partition(lo_test, m, w, τ, unique_partitions=unique_partitions_train)
     if testing_params.stochastic
-        _, test_states = one_step_pred_stochastic(lo_test, ESN_params, R, S=starting_state, partition_symbols=part_symbols_test, ON_part_adjacency=ON_part_adjacency)
+        _, test_states = one_step_pred_stochastic(lo_test, ESN_params, R, S=starting_state, partition_symbols=part_symbols_test, ON_part_adjacency=ON_part_adjacency, rescale_V_rec = testing_params.stochastic_rescale_V_rec)
     else
         _, test_states = one_step_pred(lo_test, ESN_params, R, S=starting_state, partition_symbols=part_symbols_test, mask_states_b4_readout=testing_params.mask_states_b4_readout)
     end
@@ -177,7 +178,7 @@ function create_pred_for_params_multi_step(lo_train, lo_test, m, chunk_length; k
     while chunk_i+chunk_length <= length(lo_test)
         for _ in 1:chunk_length
             if testing_params.stochastic
-                pred, state = one_step_pred_stochastic(pred, ESN_params, R, S = state, partition_symbols=part_symbol, ON_part_adjacency=ON_part_adjacency)
+                pred, state = one_step_pred_stochastic(pred, ESN_params, R, S = state, partition_symbols=part_symbol, ON_part_adjacency=ON_part_adjacency, rescale_V_rec = testing_params.stochastic_rescale_V_rec)
             else
                 pred, state = one_step_pred(pred, ESN_params, R, S = state, partition_symbols=part_symbol, mask_states_b4_readout=testing_params.mask_states_b4_readout)
             end
