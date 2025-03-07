@@ -26,6 +26,14 @@ end
 
 
 
+#####################
+### deterministic ###
+#####################
+
+
+
+# k = 50, m = 3
+
 test_multi_step_n_steps(
     file_name, tests,
     lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
@@ -38,19 +46,131 @@ test_multi_step_n_steps(
     50, 3, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], turning_partition_RMSE
 )
 
-num_partitions = 6
-
 test_multi_step_n_steps(
     file_name, tests,
     lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
-    50*num_partitions, 1, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], RMSE
+    300, 1, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], RMSE
 )
 
 test_multi_step_n_steps(
     file_name, tests,
     lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
-    50*num_partitions, 1, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], turning_partition_RMSE
+    300, 1, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], turning_partition_RMSE
 )
 
 
-save_file()
+
+
+
+
+# k = 100, m = 3
+
+num_partitions = test_multi_step_n_steps(
+    file_name, tests,
+    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    100, 3, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], RMSE
+)
+
+test_multi_step_n_steps(
+    file_name, tests,
+    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    100, 3, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], turning_partition_RMSE
+)
+
+test_multi_step_n_steps(
+    file_name, tests,
+    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    100*num_partitions, 1, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], RMSE
+)
+
+test_multi_step_n_steps(
+    file_name, tests,
+    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    100*num_partitions, 1, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], turning_partition_RMSE
+)
+
+
+
+
+
+
+
+##################
+### stochastic ###
+##################
+
+
+
+testing_params = create_testing_params(stochastic=true, stochastic_rescale_V_rec=true)
+
+
+
+# k = 50, m = 3
+
+test_multi_step_n_steps(
+    file_name, tests,
+    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    50, 3, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], RMSE,
+    testing_params = testing_params
+)
+
+test_multi_step_n_steps(
+    file_name, tests,
+    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    50, 3, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], turning_partition_RMSE,
+    testing_params = testing_params
+)
+
+test_multi_step_n_steps(
+    file_name, tests,
+    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    50*num_partitions, 1, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], RMSE,
+    testing_params = testing_params
+)
+
+test_multi_step_n_steps(
+    file_name, tests,
+    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    50*num_partitions, 1, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], turning_partition_RMSE,
+    testing_params = testing_params
+)
+
+
+
+
+
+
+# k = 100, m = 3
+
+num_partitions = test_multi_step_n_steps(
+    file_name, tests,
+    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    100, 3, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], RMSE,
+    testing_params = testing_params
+)
+
+test_multi_step_n_steps(
+    file_name, tests,
+    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    100, 3, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], turning_partition_RMSE,
+    testing_params = testing_params
+)
+
+test_multi_step_n_steps(
+    file_name, tests,
+    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    100*num_partitions, 1, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], RMSE,
+    testing_params = testing_params
+)
+
+test_multi_step_n_steps(
+    file_name, tests,
+    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    100*num_partitions, 1, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], turning_partition_RMSE,
+    testing_params = testing_params
+)
+
+
+
+
+

@@ -407,7 +407,7 @@ function test_multi_step_n_steps(file_name, tests, data_train, data_test, data_l
             test_output["errors"];
             test_multi_step_multi_trial_singular(
                 data_train, data_test, m, k;
-                error_metric=RMSE, n_steps=n_steps, ignore_first=ignore_first,
+                error_metric=error_func, n_steps=n_steps, ignore_first=ignore_first,
                 trials=trials, testing_params=testing_params
             )
         ]
