@@ -4,6 +4,8 @@ using CairoMakie
 using StatsBase
 using Distributed
 using IJulia
+using JSON
+using Dates
 
 include("ONReservoir.jl")
 using .ONReservoir
@@ -14,7 +16,7 @@ using .TurningError
 include("EchoStateNetworksStochastic.jl")
 using .EchoStateNetworksStochastic
 
-export TestingParameters, create_testing_params, compare_preds, create_pred_for_params_single_step, create_pred_for_params_free_run, create_pred_for_params_multi_step, test_multi_step, test_multi_step_multi_trial, graph_multi_step_RMSE_vs_n_steps, test_single_step, test_freerun
+export TestingParameters, create_testing_params, compare_preds, create_pred_for_params_single_step, create_pred_for_params_free_run, create_pred_for_params_multi_step, test_multi_step, test_multi_step_multi_trial, graph_multi_step_RMSE_vs_n_steps, test_single_step, test_freerun, RMSE, test_multi_step_multi_trial_singular, find_test, check_if_test_exists, test_multi_step_n_steps, save_file
 
 struct TestingParameters
     mask_states_b4_readout::Bool
@@ -295,5 +297,171 @@ function graph_multi_step_RMSE_vs_n_steps(lo_train, lo_test, n_step_trials, m, l
         i += 1
     end
 end
+
+
+
+
+
+
+#if equal_total_k
+#    vanilla_k = layer_k*num_partitions
+#else
+#    vanilla_k = layer_k        
+#end
+
+
+function test_multi_step_multi_trial_singular(
+        lo_train, lo_test, m, k;
+        error_metric=RMSE, n_steps=5, ignore_first=100, trials=10, testing_params=create_testing_params()
+    )
+    errors = []
+
+    for i in 1:trials
+        println("Trial ", i, " of ", trials)
+        
+        preds = create_pred_for_params_multi_step(
+            lo_train, lo_test, m, n_steps;
+            k = k, testing_params=testing_params
+        )
+
+        preds_cropped = preds[ignore_first+1:min(length(lo_test), end)]
+        lo_test_cropped = lo_test[ignore_first+1:min(length(preds_cropped)+ignore_first, end)]
+
+        push!(errors, error_metric(preds_cropped, lo_test_cropped))
+    end
+
+    return(mean(errors))
+end
+
+
+
+
+
+function check_if_test_exists(tests, test)
+    test_copy = deepcopy(test)
+    pop!(test_copy, "error_func", nothing)
+    test_copy["testing_params"] = Dict{String, Any}(
+        "stochastic" => test_copy["testing_params"].stochastic,
+        "mask_states_b4_readout" => test_copy["testing_params"].mask_states_b4_readout,
+        "stochastic_rescale_V_rec" => test_copy["testing_params"].stochastic_rescale_V_rec
+    )
+    test_copy["error_func"] = "$(test["error_func"])"
+    
+    # Convert any vectors to Any[]
+    for (key, value) in test_copy
+        if value isa Vector
+            test_copy[key] = Any[x for x in value]
+        end
+    end
+
+    for existing_test in tests
+        existing_test_copy = deepcopy(existing_test)
+        pop!(existing_test_copy, "errors", nothing)
+        pop!(existing_test_copy, "date", nothing)
+
+        if existing_test_copy == test_copy
+            return true
+        end
+    end
+    
+    return false
+end
+
+
+function test_multi_step_n_steps(file_name, tests, data_train, data_test, data_label,
+    k, m, n_step_trials, error_func; ignore_first=100, trials=30,
+    testing_params=create_testing_params())
+    
+    _, unique_partitions = create_ordinal_partition(data_train, m, 1, 1)
+    num_partitions = length(unique_partitions)
+
+    test_output = Dict(
+        "prediction_type" => "multi_step",
+        "testing_parameter" => "n_steps",
+        "data" => data_label,
+        "n_steps" => n_step_trials,
+        "error_func" => first(methods(error_func)).name,
+        "k" => k,
+        "m" => m,
+        "ignore_first" => ignore_first,
+        "trials" => trials,
+        "testing_params" => testing_params,
+        "num_partitions" => num_partitions
+    )
+
+    println("\nRunning Test")
+    println(test_output)
+
+    if check_if_test_exists(tests, test_output)
+        println("A test with these parameters already exists. Skipping.")
+        return
+    end
+    
+    push!(tests, test_output)
+    
+    test_output["errors"] = []
+    test_output["date"] = today()
+    
+    for n_steps in n_step_trials
+        test_output["errors"] = [
+            test_output["errors"];
+            test_multi_step_multi_trial_singular(
+                data_train, data_test, m, k;
+                error_metric=RMSE, n_steps=n_steps, ignore_first=ignore_first,
+                trials=trials, testing_params=testing_params
+            )
+        ]
+        
+        save_file(file_name, tests)
+    end
+    
+    return(num_partitions)
+end
+
+function save_file(file_name, tests)
+    println("Saving...")
+
+    open(file_name, "w") do f
+        JSON.print(f, tests)
+    end
+end
+
+
+
+
+
+
+function find_test(test_dict)
+    tests = if isfile("../Scripts/tests.json")
+        JSON.parsefile("../Scripts/tests.json")
+    else
+        error("No tests.json file found")
+    end
+
+    matching_tests = []
+    for existing_test in tests
+        if all(get(existing_test, k, nothing) == v for (k, v) in pairs(test_dict))
+            push!(matching_tests, existing_test)
+        end
+    end
+
+    if isempty(matching_tests)
+        error("No matching test found")
+    end
+    return matching_tests
+end
+
+#function multi_step_error_for_n_steps(
+#        lo_train, lo_test, m, k, n_step_trials;
+#        error_metric=RMSE, ignore_first=100, trials=30, testing_params=create_testing_params()
+#    )
+#    
+#end
+
+
+
+
+
+
 
 end

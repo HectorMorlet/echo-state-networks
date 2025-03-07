@@ -2,7 +2,7 @@ module EchoStateNetworksStochastic
 
 using LinearAlgebra
 
-include("../Scripts/EchoStateNetworks.jl")
+include("../Modules/EchoStateNetworks.jl")
 using .EchoStateNetworks
 include("StandardFunctions.jl")
 using .StandardFunctions

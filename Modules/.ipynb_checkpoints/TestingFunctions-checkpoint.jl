@@ -4,6 +4,7 @@ using CairoMakie
 using StatsBase
 using Distributed
 using IJulia
+using JSON
 
 include("ONReservoir.jl")
 using .ONReservoir
@@ -14,7 +15,7 @@ using .TurningError
 include("EchoStateNetworksStochastic.jl")
 using .EchoStateNetworksStochastic
 
-export TestingParameters, create_testing_params, compare_preds, create_pred_for_params_single_step, create_pred_for_params_free_run, create_pred_for_params_multi_step, test_multi_step, test_multi_step_multi_trial, graph_multi_step_RMSE_vs_n_steps, test_single_step, test_freerun
+export TestingParameters, create_testing_params, compare_preds, create_pred_for_params_single_step, create_pred_for_params_free_run, create_pred_for_params_multi_step, test_multi_step, test_multi_step_multi_trial, graph_multi_step_RMSE_vs_n_steps, test_single_step, test_freerun, RMSE, test_multi_step_multi_trial_singular, find_test
 
 struct TestingParameters
     mask_states_b4_readout::Bool
@@ -295,5 +296,73 @@ function graph_multi_step_RMSE_vs_n_steps(lo_train, lo_test, n_step_trials, m, l
         i += 1
     end
 end
+
+
+
+
+
+
+#if equal_total_k
+#    vanilla_k = layer_k*num_partitions
+#else
+#    vanilla_k = layer_k        
+#end
+
+
+function test_multi_step_multi_trial_singular(
+        lo_train, lo_test, m, k;
+        error_metric=RMSE, n_steps=5, ignore_first=100, trials=10, testing_params=create_testing_params()
+    )
+    errors = []
+
+    for i in 1:trials
+        println("Trial ", i, " of ", trials)
+        
+        preds = create_pred_for_params_multi_step(
+            lo_train, lo_test, m, n_steps;
+            k = k, testing_params=testing_params, return_num_partitions=true
+        )
+
+        preds_cropped = preds[ignore_first+1:min(length(lo_test), end)]
+        lo_test_cropped = lo_test[ignore_first+1:min(length(preds_cropped)+ignore_first, end)]
+
+        push!(errors, error_metric(preds_cropped, lo_test_cropped))
+    end
+
+    return(mean(errors))
+end
+
+function find_test(test_dict)
+    tests = if isfile("../Scripts/tests.json")
+        JSON.parsefile("../Scripts/tests.json")
+    else
+        error("No tests.json file found")
+    end
+
+    matching_tests = []
+    for existing_test in tests
+        if all(get(existing_test, k, nothing) == v for (k, v) in pairs(test_dict))
+            push!(matching_tests, existing_test)
+        end
+    end
+
+    if isempty(matching_tests)
+        error("No matching test found")
+    end
+    return matching_tests
+end
+
+#function multi_step_error_for_n_steps(
+#        lo_train, lo_test, m, k, n_step_trials;
+#        error_metric=RMSE, ignore_first=100, trials=30, testing_params=create_testing_params()
+#    )
+#    
+#end
+
+
+
+
+
+
 
 end
