@@ -16,7 +16,7 @@ using .TurningError
 include("EchoStateNetworksStochastic.jl")
 using .EchoStateNetworksStochastic
 
-export TestingParameters, create_testing_params, compare_preds, create_pred_for_params_single_step, create_pred_for_params_free_run, create_pred_for_params_multi_step, test_multi_step, test_multi_step_multi_trial, graph_multi_step_RMSE_vs_n_steps, test_single_step, test_freerun, RMSE, test_multi_step_multi_trial_singular, find_test, check_if_test_exists, test_multi_step_n_steps, save_file
+export TestingParameters, create_testing_params, compare_preds, create_pred_for_params_single_step, create_pred_for_params_free_run, create_pred_for_params_multi_step, test_multi_step, test_multi_step_multi_trial, graph_multi_step_RMSE_vs_n_steps, test_single_step, test_freerun, RMSE, test_multi_step_multi_trial_singular, find_test, check_if_test_exists, test_multi_step_n_steps, test_multi_step_k, save_file, chart_tests
 
 struct TestingParameters
     mask_states_b4_readout::Bool
@@ -224,7 +224,7 @@ function test_multi_step_multi_trial(lo_train, lo_test, m, layer_k; n_steps=5, e
 
     for i in 1:trials
         println("Trial ", i, " of ", trials)
-        ON_preds, num_partitions = create_pred_for_params_multi_step(lo_train, lo_test, 3, n_steps; k = layer_k, return_num_partitions=true, testing_params=testing_params)
+        ON_preds, num_partitions = create_pred_for_params_multi_step(lo_train, lo_test, m, n_steps; k = layer_k, return_num_partitions=true, testing_params=testing_params)
         if equal_total_k
             vanilla_k = layer_k*num_partitions
         else
@@ -291,7 +291,7 @@ function graph_multi_step_RMSE_vs_n_steps(lo_train, lo_test, n_step_trials, m, l
 
         axislegend(position=(:right, :bottom))
     
-        IJulia.clear_output(true)
+        # IJulia.clear_output(true)
         display(fig)
 
         i += 1
@@ -312,9 +312,9 @@ end
 
 function test_multi_step_multi_trial_singular(
         lo_train, lo_test, m, k;
-        error_metric=RMSE, n_steps=5, ignore_first=100, trials=10, testing_params=create_testing_params()
+        error_metrics=[RMSE, turning_partition_RMSE], n_steps=5, ignore_first=100, trials=10, testing_params=create_testing_params()
     )
-    errors = []
+    errors = Dict(error_metric => Float64[] for error_metric in error_metrics)
 
     for i in 1:trials
         println("Trial ", i, " of ", trials)
@@ -327,10 +327,12 @@ function test_multi_step_multi_trial_singular(
         preds_cropped = preds[ignore_first+1:min(length(lo_test), end)]
         lo_test_cropped = lo_test[ignore_first+1:min(length(preds_cropped)+ignore_first, end)]
 
-        push!(errors, error_metric(preds_cropped, lo_test_cropped))
+        for error_metric in error_metrics
+            push!(errors[error_metric], error_metric(preds_cropped, lo_test_cropped))
+        end
     end
 
-    return(mean(errors))
+    return Dict(metric => mean(values) for (metric, values) in errors)
 end
 
 
@@ -345,12 +347,13 @@ function check_if_test_exists(tests, test)
         "mask_states_b4_readout" => test_copy["testing_params"].mask_states_b4_readout,
         "stochastic_rescale_V_rec" => test_copy["testing_params"].stochastic_rescale_V_rec
     )
-    test_copy["error_func"] = "$(test["error_func"])"
-    
+    test_copy["error_funcs"] = ["$(err_func)" for err_func in test["error_funcs"]]
+
     # Convert any vectors to Any[]
     for (key, value) in test_copy
         if value isa Vector
             test_copy[key] = Any[x for x in value]
+            test_copy[key] = sort(value)
         end
     end
 
@@ -359,6 +362,13 @@ function check_if_test_exists(tests, test)
         pop!(existing_test_copy, "errors", nothing)
         pop!(existing_test_copy, "date", nothing)
 
+        # Sort any vectors in existing test
+        for (key, value) in existing_test_copy
+            if value isa Vector
+                existing_test_copy[key] = sort(value)
+            end
+        end
+        
         if existing_test_copy == test_copy
             return true
         end
@@ -368,9 +378,31 @@ function check_if_test_exists(tests, test)
 end
 
 
+function name_of_func(func)
+    # Try to get name from methods first
+    ms = methods(func)
+    if !isempty(ms)
+        return first(ms).name
+    end
+    
+    # Fallback to string representation
+    str_repr = string(func)
+    # Remove module prefix if present (e.g. "Main.RMSE" -> "RMSE")
+    return string(split(str_repr, '.')[end])
+end
+
+
 function test_multi_step_n_steps(file_name, tests, data_train, data_test, data_label,
-    k, m, n_step_trials, error_func; ignore_first=100, trials=30,
-    testing_params=create_testing_params())
+    k, m, n_step_trials;
+    error_funcs = [RMSE, turning_partition_RMSE],
+    ignore_first=100, trials=30,
+    testing_params=create_testing_params(),
+    do_chart=true)
+
+    # Check for duplicates in n_step_trials
+    if length(unique(n_step_trials)) != length(n_step_trials)
+        error("n_step_trials contains duplicate values")
+    end
     
     _, unique_partitions = create_ordinal_partition(data_train, m, 1, 1)
     num_partitions = length(unique_partitions)
@@ -380,7 +412,7 @@ function test_multi_step_n_steps(file_name, tests, data_train, data_test, data_l
         "testing_parameter" => "n_steps",
         "data" => data_label,
         "n_steps" => n_step_trials,
-        "error_func" => first(methods(error_func)).name,
+        "error_funcs" => [name_of_func(error_func) for error_func in error_funcs],
         "k" => k,
         "m" => m,
         "ignore_first" => ignore_first,
@@ -389,12 +421,85 @@ function test_multi_step_n_steps(file_name, tests, data_train, data_test, data_l
         "num_partitions" => num_partitions
     )
 
-    println("\nRunning Test")
+    println("\n\n\n############\nRunning Test\n############\n")
     println(test_output)
+    println("\n")
 
     if check_if_test_exists(tests, test_output)
         println("A test with these parameters already exists. Skipping.")
-        return
+        return(num_partitions)
+    end
+    
+    push!(tests, test_output)
+    
+    test_output["errors"] = Dict(
+        name_of_func(error_func) => Float64[] for error_func in error_funcs
+    )
+    test_output["date"] = today()
+    
+    for n_steps in n_step_trials
+        println(findall(x -> x == n_steps, n_step_trials)[1], " / ", length(n_step_trials))
+
+        errors = test_multi_step_multi_trial_singular(
+            data_train, data_test, m, k;
+            error_metrics=error_funcs, n_steps=n_steps, ignore_first=ignore_first,
+            trials=trials, testing_params=testing_params
+        )
+
+        for error_func in error_funcs
+            push!(test_output["errors"][name_of_func(error_func)], errors[error_func])
+        end
+
+        if do_chart
+            display(
+                chart_tests(
+                    "Error vs. num steps\nm = $m, k = $k", "Num steps", "Error",
+                    Dict("Test in progress" => test_output)
+                )
+            )
+        end
+        
+        save_file(file_name, tests)
+    end
+    
+    return(num_partitions)
+end
+
+function test_multi_step_k(file_name, tests, data_train, data_test, data_label,
+    k_trials, m, n_steps;
+    error_funcs = [RMSE, turning_partition_RMSE],
+    ignore_first=100, trials=30,
+    testing_params=create_testing_params())
+
+    # Check for duplicates in k_trials
+    if length(unique(k_trials)) != length(k_trials)
+        error("k_trials contains duplicate values")
+    end
+    
+    _, unique_partitions = create_ordinal_partition(data_train, m, 1, 1)
+    num_partitions = length(unique_partitions)
+
+    test_output = Dict(
+        "prediction_type" => "multi_step",
+        "testing_parameter" => "k",
+        "data" => data_label,
+        "ks" => k_trials,
+        "error_func" => name_of_func(error_func),
+        "n_steps" => n_steps,
+        "m" => m,
+        "ignore_first" => ignore_first,
+        "trials" => trials,
+        "testing_params" => testing_params,
+        "num_partitions" => num_partitions
+    )
+
+    println("\n\n\n############\nRunning Test\n############\n")
+    println(test_output)
+    println("\n")
+
+    if check_if_test_exists(tests, test_output)
+        println("A test with these parameters already exists. Skipping.")
+        return(num_partitions)
     end
     
     push!(tests, test_output)
@@ -402,12 +507,14 @@ function test_multi_step_n_steps(file_name, tests, data_train, data_test, data_l
     test_output["errors"] = []
     test_output["date"] = today()
     
-    for n_steps in n_step_trials
+    for k in k_trials
+        println(findall(x -> x == k, k_trials)[1], " / ", length(k_trials))
+
         test_output["errors"] = [
             test_output["errors"];
             test_multi_step_multi_trial_singular(
                 data_train, data_test, m, k;
-                error_metric=error_func, n_steps=n_steps, ignore_first=ignore_first,
+                error_metrics=error_funcs, n_steps=n_steps, ignore_first=ignore_first,
                 trials=trials, testing_params=testing_params
             )
         ]
@@ -451,15 +558,40 @@ function find_test(test_dict)
     return matching_tests
 end
 
-#function multi_step_error_for_n_steps(
-#        lo_train, lo_test, m, k, n_step_trials;
-#        error_metric=RMSE, ignore_first=100, trials=30, testing_params=create_testing_params()
-#    )
-#    
-#end
+function chart_tests(title, xlabel, ylabel, results; metrics=first(values(results))["error_funcs"])
+    fig = Figure(size=(800, 600))
+    ax = Axis(fig[1,1], 
+        xlabel=xlabel, 
+        ylabel=ylabel,
+        title=title)
+
+    for (i, (key, test)) in enumerate(pairs(results))
+        for metric in metrics
+            dependent_var = test["errors"][metric]
+            independent_var = test[test["testing_parameter"]][1:length(dependent_var)]
+            lines!(ax, independent_var, dependent_var, color=Cycled(i), label=key * " - " * name_of_func(metric))
+            scatter!(ax, independent_var, dependent_var, color=Cycled(i))
+        end
+    end
+
+    axislegend(position=(:right, :bottom))
+
+    fig
+end
 
 
+function quick_graph_series(series, x_start=0, x_end=500, y_start=-50, y_end=50)
+    fig = Figure(size=(800, 600))
+    ax = Axis(fig[1,1])
 
+    lines!(ax, series, color=Cycled(1))
+    scatter!(ax, series, color=Cycled(1))
+
+    xlims!(0, 500)
+    ylims!(-80, 80)
+
+    fig
+end
 
 
 
