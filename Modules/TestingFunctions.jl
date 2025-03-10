@@ -298,48 +298,37 @@ function graph_multi_step_RMSE_vs_n_steps(lo_train, lo_test, n_step_trials, m, l
     end
 end
 
-
-
-
-
-
-#if equal_total_k
-#    vanilla_k = layer_k*num_partitions
-#else
-#    vanilla_k = layer_k        
-#end
-
-
 function test_multi_step_multi_trial_singular(
-        lo_train, lo_test, m, k;
-        error_metrics=[RMSE, turning_partition_RMSE], n_steps=5, ignore_first=100, trials=10, testing_params=create_testing_params()
+        data_train, data_test;
+        m::Union{Int,Nothing}=nothing, k::Union{Int,Nothing}=nothing, n_steps::Union{Int,Nothing}=nothing,
+        error_metrics=[RMSE, turning_partition_RMSE], ignore_first=100, trials=10, testing_params=create_testing_params()
     )
+    if isnothing(m) || isnothing(k) || isnothing(n_steps)
+        error("Both m and k must be provided")
+    end
+
     errors = Dict(error_metric => Float64[] for error_metric in error_metrics)
 
     for i in 1:trials
         println("Trial ", i, " of ", trials)
         
         preds = create_pred_for_params_multi_step(
-            lo_train, lo_test, m, n_steps;
+            data_train, data_test, m, n_steps;
             k = k, testing_params=testing_params
         )
 
-        preds_cropped = preds[ignore_first+1:min(length(lo_test), end)]
-        lo_test_cropped = lo_test[ignore_first+1:min(length(preds_cropped)+ignore_first, end)]
+        preds_cropped = preds[ignore_first+1:min(length(data_test), end)]
+        data_test_cropped = data_test[ignore_first+1:min(length(preds_cropped)+ignore_first, end)]
 
         for error_metric in error_metrics
-            push!(errors[error_metric], error_metric(preds_cropped, lo_test_cropped))
+            push!(errors[error_metric], error_metric(preds_cropped, data_test_cropped))
         end
     end
 
     return Dict(metric => mean(values) for (metric, values) in errors)
 end
 
-
-
-
-
-function check_if_test_exists(tests, test)
+function find_existing_test(tests, test)
     test_copy = deepcopy(test)
     pop!(test_copy, "error_func", nothing)
     test_copy["testing_params"] = Dict{String, Any}(
@@ -370,13 +359,12 @@ function check_if_test_exists(tests, test)
         end
         
         if existing_test_copy == test_copy
-            return true
+            return existing_test
         end
     end
     
-    return false
+    return nothing
 end
-
 
 function name_of_func(func)
     # Try to get name from methods first
@@ -391,42 +379,74 @@ function name_of_func(func)
     return string(split(str_repr, '.')[end])
 end
 
+function display_test_chart(testing_parameter, fixed_params, test_output)
+    param_name = titlecase(testing_parameter)
+    display(
+        chart_tests(
+            "Error vs. $param_name\n$(join(["$k = $v" for (k,v) in fixed_params], ", "))",
+            param_name, "Error",
+            Dict("Test in progress" => test_output)
+        )
+    )
+end
 
-function test_multi_step_n_steps(file_name, tests, data_train, data_test, data_label,
-    k, m, n_step_trials;
+function test_multi_step(file_name, tests, data_train, data_test, data_label,
+    testing_parameter::String, parameter_trials, fixed_params::Dict;
     error_funcs = [RMSE, turning_partition_RMSE],
     ignore_first=100, trials=30,
     testing_params=create_testing_params(),
-    do_chart=true)
+    do_chart=true,
+    do_chart_existing=false)
 
-    # Check for duplicates in n_step_trials
-    if length(unique(n_step_trials)) != length(n_step_trials)
-        error("n_step_trials contains duplicate values")
+    # Check for duplicates in parameter trials
+    if length(unique(parameter_trials)) != length(parameter_trials)
+        error("parameter_trials contains duplicate values")
     end
     
-    _, unique_partitions = create_ordinal_partition(data_train, m, 1, 1)
-    num_partitions = length(unique_partitions)
+    # Calculate num_partitions only if m is not the testing parameter
+    num_partitions = nothing
+    if testing_parameter != "m"
+        m = get(fixed_params, :m, fixed_params["m"])
+        _, unique_partitions = create_ordinal_partition(data_train, m, 1, 1)
+        num_partitions = length(unique_partitions)
+    end
 
+    # Create test output dictionary
     test_output = Dict(
         "prediction_type" => "multi_step",
-        "testing_parameter" => "n_steps",
+        "testing_parameter" => testing_parameter,
         "data" => data_label,
-        "n_steps" => n_step_trials,
+        testing_parameter => parameter_trials,
         "error_funcs" => [name_of_func(error_func) for error_func in error_funcs],
-        "k" => k,
-        "m" => m,
         "ignore_first" => ignore_first,
         "trials" => trials,
         "testing_params" => testing_params,
         "num_partitions" => num_partitions
     )
 
+    # Add fixed parameters to test output
+    for (key, value) in fixed_params
+        test_output[String(key)] = value
+    end
+
+    if testing_parameter != "k" && testing_parameter != "m"
+        test_output["total_k"] = test_output["k"] * num_partitions
+    else
+        test_output["total_k"] = nothing
+    end
+
     println("\n\n\n############\nRunning Test\n############\n")
     println(test_output)
     println("\n")
 
-    if check_if_test_exists(tests, test_output)
+    existing_test = find_existing_test(tests, test_output)
+    if existing_test !== nothing
         println("A test with these parameters already exists. Skipping.")
+
+        if do_chart_existing
+            println("Charting...")
+            display_test_chart(testing_parameter, fixed_params, existing_test)
+        end
         return(num_partitions)
     end
     
@@ -437,13 +457,18 @@ function test_multi_step_n_steps(file_name, tests, data_train, data_test, data_l
     )
     test_output["date"] = today()
     
-    for n_steps in n_step_trials
-        println(findall(x -> x == n_steps, n_step_trials)[1], " / ", length(n_step_trials))
+    for param_value in parameter_trials
+        println(findall(x -> x == param_value, parameter_trials)[1], " / ", length(parameter_trials))
+
+        # Create kwargs dict by merging fixed params with current parameter value
+        kwargs = Dict{Symbol,Any}((Symbol(k), v) for (k, v) in pairs(fixed_params))
+        kwargs[Symbol(testing_parameter)] = param_value
 
         errors = test_multi_step_multi_trial_singular(
-            data_train, data_test, m, k;
-            error_metrics=error_funcs, n_steps=n_steps, ignore_first=ignore_first,
-            trials=trials, testing_params=testing_params
+            data_train, data_test;
+            error_metrics=error_funcs, ignore_first=ignore_first,
+            trials=trials, testing_params=testing_params,
+            kwargs...
         )
 
         for error_func in error_funcs
@@ -451,73 +476,8 @@ function test_multi_step_n_steps(file_name, tests, data_train, data_test, data_l
         end
 
         if do_chart
-            display(
-                chart_tests(
-                    "Error vs. num steps\nm = $m, k = $k", "Num steps", "Error",
-                    Dict("Test in progress" => test_output)
-                )
-            )
+            display_test_chart(testing_parameter, fixed_params, test_output)
         end
-        
-        save_file(file_name, tests)
-    end
-    
-    return(num_partitions)
-end
-
-function test_multi_step_k(file_name, tests, data_train, data_test, data_label,
-    k_trials, m, n_steps;
-    error_funcs = [RMSE, turning_partition_RMSE],
-    ignore_first=100, trials=30,
-    testing_params=create_testing_params())
-
-    # Check for duplicates in k_trials
-    if length(unique(k_trials)) != length(k_trials)
-        error("k_trials contains duplicate values")
-    end
-    
-    _, unique_partitions = create_ordinal_partition(data_train, m, 1, 1)
-    num_partitions = length(unique_partitions)
-
-    test_output = Dict(
-        "prediction_type" => "multi_step",
-        "testing_parameter" => "k",
-        "data" => data_label,
-        "ks" => k_trials,
-        "error_func" => name_of_func(error_func),
-        "n_steps" => n_steps,
-        "m" => m,
-        "ignore_first" => ignore_first,
-        "trials" => trials,
-        "testing_params" => testing_params,
-        "num_partitions" => num_partitions
-    )
-
-    println("\n\n\n############\nRunning Test\n############\n")
-    println(test_output)
-    println("\n")
-
-    if check_if_test_exists(tests, test_output)
-        println("A test with these parameters already exists. Skipping.")
-        return(num_partitions)
-    end
-    
-    push!(tests, test_output)
-    
-    test_output["errors"] = []
-    test_output["date"] = today()
-    
-    for k in k_trials
-        println(findall(x -> x == k, k_trials)[1], " / ", length(k_trials))
-
-        test_output["errors"] = [
-            test_output["errors"];
-            test_multi_step_multi_trial_singular(
-                data_train, data_test, m, k;
-                error_metrics=error_funcs, n_steps=n_steps, ignore_first=ignore_first,
-                trials=trials, testing_params=testing_params
-            )
-        ]
         
         save_file(file_name, tests)
     end
@@ -533,14 +493,9 @@ function save_file(file_name, tests)
     end
 end
 
-
-
-
-
-
 function find_test(test_dict)
-    tests = if isfile("../Scripts/tests.json")
-        JSON.parsefile("../Scripts/tests.json")
+    tests = if isfile("../../Scripts/tests.json")
+        JSON.parsefile("../../Scripts/tests.json")
     else
         error("No tests.json file found")
     end
@@ -558,27 +513,33 @@ function find_test(test_dict)
     return matching_tests
 end
 
-function chart_tests(title, xlabel, ylabel, results; metrics=first(values(results))["error_funcs"])
+function chart_tests(title, xlabel, ylabel, results;
+    metrics=first(values(results))["error_funcs"], bottom_margin=0,
+    ylim_low=nothing,
+    ylim_high=nothing)
     fig = Figure(size=(800, 600))
-    ax = Axis(fig[1,1], 
-        xlabel=xlabel, 
+    ax = Axis(fig[1,1],
+        xlabel=xlabel,
         ylabel=ylabel,
         title=title)
 
-    for (i, (key, test)) in enumerate(pairs(results))
+    i = 1
+    for (key, test) in pairs(results)
         for metric in metrics
             dependent_var = test["errors"][metric]
             independent_var = test[test["testing_parameter"]][1:length(dependent_var)]
             lines!(ax, independent_var, dependent_var, color=Cycled(i), label=key * " - " * name_of_func(metric))
             scatter!(ax, independent_var, dependent_var, color=Cycled(i))
+            i += 1
         end
     end
+
+    ylims!(ylim_low, ylim_high)
 
     axislegend(position=(:right, :bottom))
 
     fig
 end
-
 
 function quick_graph_series(series, x_start=0, x_end=500, y_start=-50, y_end=50)
     fig = Figure(size=(800, 600))
@@ -592,8 +553,5 @@ function quick_graph_series(series, x_start=0, x_end=500, y_start=-50, y_end=50)
 
     fig
 end
-
-
-
 
 end
