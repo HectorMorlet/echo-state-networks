@@ -35,6 +35,9 @@ lo_test_0_01 = vec(readdlm(joinpath(@__DIR__, "..", "Data", "lorenz_test_0_01.tx
 
 
 
+
+
+
 file_name = joinpath(@__DIR__, "tests.json")
 
 # Read existing data (or create empty array if file doesn’t exist)
@@ -55,6 +58,14 @@ end
 
 # save_file(file_name, tests)
 
+# for test in tests
+#     if !haskey(test["testing_params"], "readout_switching")
+#         test["testing_params"]["readout_switching"] = false
+#     end
+# end
+
+# save_file("tests.json", tests)
+
 
 part_lcm = lcm(6, 13) # 78
 
@@ -64,7 +75,51 @@ println("### deterministic ###")
 println("#####################")
 
 
+println("\n\n\n##########\n\nTESTING ON_layered vs readout switching over n_steps\n\n##########\n")
+
+testing_params = create_testing_params(
+    stochastic=false,
+    stochastic_rescale_V_rec=false,
+    readout_switching=true
+)
+n_steps_test = [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100]
+
+num_partitions = test_multi_step(
+    file_name, tests, 
+    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    "n_steps", n_steps_test, 
+    Dict("m" => 1, "k" => part_lcm*6),
+    testing_params = testing_params
+)
+
+num_partitions = test_multi_step(
+    file_name, tests, 
+    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    "n_steps", n_steps_test, 
+    Dict("m" => 2, "k" => part_lcm*6),
+    testing_params = testing_params
+)
+
+num_partitions = test_multi_step(
+    file_name, tests, 
+    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    "n_steps", n_steps_test, 
+    Dict("m" => 3, "k" => part_lcm*6),
+    testing_params = testing_params
+)
+
+num_partitions = test_multi_step(
+    file_name, tests, 
+    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    "n_steps", n_steps_test,
+    Dict("m" => 4, "k" => part_lcm*6),
+    testing_params = testing_params
+)
+
+
+
 println("\n\n\n##########\n\nTESTING n_steps\n\n##########\n")
+
 
 
 

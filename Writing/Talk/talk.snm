@@ -1,2 +1,9 @@
-\beamer@slide {fig:ESN}{4}
-\beamer@slide {fig:ESN}{8}
+\beamer@slide {fig:ESN}{5}
+\beamer@slide {tab:transition_probabilities}{10}
+\beamer@slide {fig:lorenz_combined}{12}
+\beamer@slide {fig:ESN}{13}
+\beamer@slide {fig:ESN}{14}
+\beamer@slide {fig:readout_switching_rmse_vs_steps}{17}
+\beamer@slide {fig:ESN}{19}
+\beamer@slide {fig:OPESN_rmse_vs_steps}{22}
+\beamer@slide {fig:OPESN_vs_readout_switching}{23}

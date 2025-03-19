@@ -24,16 +24,23 @@ function create_ordinal_partition_future(tr, m, w, τ; unique_partitions = nothi
 end
 
 function create_ordinal_partition(tr, m, w, τ; unique_partitions = nothing)
+    # println("\n\nCreating ordinal partition...")
     rankings = zeros(Int, trunc(Int, length(tr)/w - τ*(m-1)), m)
     for j in 1:1:trunc(Int, length(tr)/w - τ*(m-1))
+
         x = w*(j-1) + 1
+        # if length(tr) == 4
+        #     println("Testing ", [tr[i] for i in x:τ:(x+τ*(m-1))])
+        #     println("Result ", sortperm([tr[i] for i in x:τ:(x+τ*(m-1))]))
+        # end
         rankings[j, :] = sortperm([tr[i] for i in x:τ:(x+τ*(m-1))])
     end
-    if unique_partitions == nothing
+    if unique_partitions === nothing
         unique_partitions = unique(eachrow(rankings))
     end
     part_symbols = [findfirst(==(row), unique_partitions) for row in eachrow(rankings)]
     part_symbols = [[nothing for _ in 1:τ*(m-1)]; part_symbols]
+
     return(part_symbols, unique_partitions)
 end
 

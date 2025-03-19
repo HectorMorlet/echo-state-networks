@@ -125,11 +125,12 @@ function run_ESN_stochastic(x, ESN_params; S = nothing, partition_symbols = noth
     return(states')
 end
 
-function train_one_step_pred_stochastic(x, ESN_params; partition_symbols=nothing, ON_part_adjacency=nothing, rescale_V_rec=true)
+function train_one_step_pred_stochastic(x, ESN_params; partition_symbols=nothing, ON_part_adjacency=nothing, rescale_V_rec=true, R_delay=1)
     states = run_ESN_stochastic(x, ESN_params; partition_symbols=partition_symbols, ON_part_adjacency=ON_part_adjacency, rescale_V_rec=true)
     
-    target_z = x[2:length(x)]
-    predicted_states = states[1:size(states)[1]-1,:]
+    target_z = x[1+R_delay:length(x)]
+    @assert(size(states)[1]-R_delay == length(target_z))
+    predicted_states = states[1:length(target_z),:]
 
     # don't mask the states before readout
     # if partition_symbols != nothing

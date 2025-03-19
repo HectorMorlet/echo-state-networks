@@ -8,7 +8,7 @@ using LinearAlgebra
 include("StandardFunctions.jl")
 using .StandardFunctions
 
-export ESNParameters, create_ESN_params, train_one_step_pred, one_step_pred, mask_states!, mask_V_in_for_partition, run_ESN#remove last two
+export ESNParameters, create_ESN_params, train_one_step_pred, one_step_pred, mask_states!, mask_V_in_for_partition, run_ESN, erdos_renyi_adjacency#remove last two
 
 struct ESNParameters
     V_in::Vector{Float64}
@@ -88,11 +88,11 @@ function create_ESN(k, d, ρ; num_partitions=1, ON_part_adjacency=nothing, set_c
     # println("The prescribed d is ", d)
     # println("The resulting d is ", sum([sum(V_rec[1+k*i:k+k*i, 1+k*i:k+k*i] .> 0)/k for i in 0:(num_partitions-1)])/num_partitions)
     # return()
-
-    # Rescale adjacency to be only as large as largest weight
-    ON_part_adjacency = ON_part_adjacency/maximum(ON_part_adjacency)*maximum(V_rec)
     
     if ON_part_adjacency != nothing
+        # Rescale adjacency to be only as large as largest weight
+        ON_part_adjacency = ON_part_adjacency/maximum(ON_part_adjacency)*maximum(V_rec)
+
         mask_adjacency!(V_rec, k, num_partitions, ON_part_adjacency, set_connection=set_connection)
     end
     
@@ -123,7 +123,7 @@ function mask_V_in_for_partition(V_in, partition, k, num_partitions)
 end
 
 function run_ESN(x, ESN_params; S = nothing, partition_symbols = nothing)
-    if S == nothing
+    if S === nothing
         S = randn(ESN_params.k*ESN_params.num_partitions)
     end
     
@@ -163,14 +163,15 @@ function mask_states!(states, partition_symbols, k, num_partitions)
     end
 end
 
-function train_one_step_pred(x, ESN_params; partition_symbols=nothing, mask_states_b4_readout=false)
+function train_one_step_pred(x, ESN_params, testing_params; partition_symbols=nothing, R_delay=1)
     states = run_ESN(x, ESN_params; partition_symbols=partition_symbols)
     
-    target_z = x[2:length(x)]
-    predicted_states = states[1:size(states)[1]-1,:]
+    target_z = x[1+R_delay:length(x)]
+    @assert(size(states)[1]-R_delay == length(target_z))
+    predicted_states = states[1:length(target_z),:]
 
     # don't mask the states before readout
-    if mask_states_b4_readout
+    if testing_params.mask_states_b4_readout
         if partition_symbols != nothing
             mask_states!(predicted_states, partition_symbols, ESN_params.k, ESN_params.num_partitions)
         end
@@ -181,11 +182,10 @@ function train_one_step_pred(x, ESN_params; partition_symbols=nothing, mask_stat
     return(R, states)
 end
 
-function one_step_pred(x, ESN_params, R; S = nothing, partition_symbols=nothing, mask_states_b4_readout=false)
+function one_step_pred(x, ESN_params, R, testing_params; S = nothing, partition_symbols=nothing)
     states = run_ESN(x, ESN_params; S = S, partition_symbols=partition_symbols)
 
-    # don't mask the states before readout
-    if mask_states_b4_readout
+    if testing_params.mask_states_b4_readout
         if partition_symbols != nothing
             mask_states!(states, partition_symbols, ESN_params.k, ESN_params.num_partitions)
         end

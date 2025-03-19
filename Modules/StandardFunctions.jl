@@ -21,6 +21,7 @@ function ridge_regression(x::Vector, states::Matrix, beta::Float64)
     I_test = Matrix{Float64}(I, n_features, n_features)
     
     # Compute the Ridge regression solution
+    # R = (states' * states + beta * I_test) \ (states' * x)
     R = (states' * states + beta * I_test) \ (states' * x)
     
     return R
