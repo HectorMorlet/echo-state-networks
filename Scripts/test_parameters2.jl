@@ -1,75 +1,150 @@
 using DelimitedFiles
 using JSON
-using StatsBase
 
-include("/Users/hectormorlet/Desktop/Uni/Honours Research/echo-state-networks/Modules/TurningError.jl")
+include("../Modules/TurningError.jl")
 using .TurningError
-include("/Users/hectormorlet/Desktop/Uni/Honours Research/echo-state-networks/Modules/TestingFunctions.jl")
+include("../Modules/TestingFunctions.jl")
 using .TestingFunctions
 
+
+
 # read in lo_train and lo_test
-lo_train_0_01 = vec(readdlm(joinpath(@__DIR__, "Data", "lorenz_train_0_01.txt")))
-lo_test_0_01 = vec(readdlm(joinpath(@__DIR__, "Data", "lorenz_test_0_01.txt")))
+lo_train_0_01 = vec(readdlm(joinpath(@__DIR__, "..", "Data", "lorenz_train_0_01.txt")))
+lo_test_0_01 = vec(readdlm(joinpath(@__DIR__, "..", "Data", "lorenz_test_0_01.txt")))
 
-n_trials = 30
 
-R_delay = 100
-metrics = [RMSE, turning_partition_RMSE]
 
-function trial_single_step(R_delays, m, k)
-    metric_result_means = Dict()
-    for metric in metrics
-        metric_result_means[metric] = []
-    end
 
-    for R_delay in R_delays
-        println("\nR_delay: ", R_delay)
 
-        metric_results = Dict()
-        for metric in metrics
-            metric_results[metric] = []
-        end
+file_name = joinpath(@__DIR__, "tests.json")
 
-        for i in 1:n_trials
-            println("Trial ", i, " of ", n_trials)
-
-            preds = create_pred_for_params_single_step(
-                lo_train_0_01,
-                lo_test_0_01,
-                m,
-                k=k,
-                R_delay=R_delay
-            )[1:end-R_delay]
-
-            for metric in metrics
-                push!(metric_results[metric], metric(lo_test_0_01[1+R_delay:end], preds))
-            end
-        end
-
-        for (metric, metric_result_series) in metric_results
-            push!(metric_result_means[metric], mean(metric_result_series))
-        end
-    end
-
-    return(metric_result_means)
+# Read existing data (or create empty array if file doesn’t exist)
+tests = if isfile(file_name)
+    JSON.parsefile(file_name)
+else
+    []
 end
 
-R_delays = [1, 2, 3, 5, 10, 20, 30, 50, 70, 100]
-
 part_lcm = lcm(6, 13) # 78
-total_k = 78*8 # 624
-
-println("\n\n\n\nTesting m = 1")
-R_delays_1 = trial_single_step(R_delays, 1, 624)
-println("\n\n\n\nTesting m = 2")
-R_delays_2 = trial_single_step(R_delays, 2, 624 ÷ 2)
-println("\n\n\n\nTesting m = 3")
-R_delays_3 = trial_single_step(R_delays, 3, 624 ÷ 6)
-println("\n\n\n\nTesting m = 4")
-R_delays_3 = trial_single_step(R_delays, 4, 624 ÷ 13)
 
 
-# TODO:
-# - Fix beginning jitteryness - is it starting with the test partitions correctly?
-# - Saving to json
-# - 
+
+
+n_steps_test = [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100]
+ms = [1, 2, 3, 4]
+
+
+
+
+println("\n\n\n##########\n\nTESTING n_steps\n\n##########\n")
+
+println("TESTING total_k = 468, m = 1, 2, 3, 4\n")
+
+testing_paramss = [
+    create_testing_params(),
+    create_testing_params(stochastic=true, stochastic_rescale_V_rec=true)
+]
+
+ks = [part_lcm*6, part_lcm*3, part_lcm, div(part_lcm*6, 13)]
+for prediction_type in ["multi_step", "single_step"]
+    println("\nTESTING ", prediction_type)
+    for testing_params in testing_paramss
+        println("\nTESTING ", testing_params)
+        for i in 1:4
+            num_partitions = test_params(
+                file_name, tests, 
+                lo_train_0_01, lo_test_0_01, prediction_type, "Lorenz 0_01", 
+                "n_steps", n_steps_test, 
+                Dict("m" => ms[i], "k" => ks[i])
+            )
+        end
+    end
+end
+
+
+
+println("TESTING single step total_k = 288, m = 1, 2, 3, 4\n")
+
+total_k = 8*6*13
+ks = [total_k, total_k÷2, total_k÷6, total_k÷13]
+
+for i in 1:4
+    num_partitions = test_params(
+        file_name, tests, 
+        lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
+        "n_steps", n_steps_test, 
+        Dict("m" => ms[i], "k" => ks[i])
+    )
+end
+
+
+
+println("TESTING single step total_k = 288, m = 1, 2, 3, 4\n")
+
+min_subreservoir_k = 48
+
+ks = [48*6, 48*3, 48]
+
+for i in 1:3
+    num_partitions = test_params(
+        file_name, tests, 
+        lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
+        "n_steps", n_steps_test, 
+        Dict("m" => ms[i], "k" => ks[i])
+    )
+end
+
+
+
+
+
+
+
+
+
+for k in [50, 100]
+    println("TESTING subreservoir k = $(k), m = 1, 2, 3, 4\n")
+    for m in 1:4
+        num_partitions = test_params(
+            file_name, tests, 
+            lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
+            "n_steps", n_steps_test, 
+            Dict("m" => m, "k" => k)
+        )
+    end
+end
+
+println("\n\nTESTING readout switching\n")
+
+testing_params = create_testing_params(readout_switching=true)
+for m in 1:4
+    num_partitions = test_params(
+        file_name, tests, 
+        lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
+        "n_steps", n_steps_test, 
+        Dict("m" => m, "k" => part_lcm*6),
+        testing_params = testing_params
+    )
+end
+
+
+
+
+
+
+println("\n\n\n##########\n\nTESTING Ks\n\n##########\n")
+
+total_ks = [part_lcm, part_lcm*2, part_lcm*4, part_lcm*8, part_lcm*16]
+for m in 1:4
+    println("\nTESTING m = $(m)\n##########\n")
+
+    for n_steps in [1, 5, 50]
+        num_partitions = test_params(
+            file_name, tests,
+            lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
+            "k", total_ks,
+            Dict("m" => m, "n_steps" => n_steps))
+        println(num_partitions)
+    end
+end
+

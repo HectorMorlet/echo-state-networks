@@ -1,0 +1,95 @@
+%
+% Honours Thesis template that uses the memoir package
+%
+\documentclass[a4paper,12pt]{memoir}
+
+
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx,color,xcolor}
+\usepackage{thmtools}
+\usepackage[linktocpage=true]{hyperref}
+
+\hypersetup{
+    colorlinks,
+    linkcolor={blue!90!black},
+    citecolor={blue!90!black},
+    urlcolor={blue!90!black}
+}
+
+\newtheorem{theorem}{Theorem}[section] 
+\newtheorem{lemma}[theorem]{Lemma}    
+\newtheorem{propn}[theorem]{Proposition}    
+\newtheorem{corollary}[theorem]{Corollary}    
+\newtheorem{example}[theorem]{Example}    
+\newtheorem{question}[theorem]{Question}    
+\newtheorem{exercise}[theorem]{Exercise}    
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{property}[theorem]{Property}
+\newtheorem{claim}{Claim}
+\newtheorem{fact}{Fact}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{problem}[theorem]{Problem}
+
+
+\declaretheoremstyle[
+  headfont=\normalfont\bfseries,
+  numbered=unless unique,
+  bodyfont=\normalfont,
+  spaceabove=1em plus 0.75em minus 0.25em,
+  spacebelow=1em plus 0.75em minus 0.25em,
+  qed=$\bullet$,
+]{exmpstyle2}
+
+\declaretheorem[
+  style=exmpstyle2,
+  title=Example,
+  refname={example,examples},
+  Refname={Example,Examples}
+]{example2}
+
+\renewcommand{\le}{\leqslant}
+\renewcommand{\ge}{\geqslant}
+\renewcommand{\leq}{\leqslant}
+\renewcommand{\geq}{\geqslant}
+
+\setlrmarginsandblock{4cm}{2cm}{*}
+\setulmarginsandblock{3.5cm}{3cm}{*}
+\checkandfixthelayout
+
+\chapterstyle{ger}   % you can easily change the chapter style here
+\nouppercaseheads
+\tightlists
+
+\graphicspath{ {Images/} }
+
+\makeindex
+
+\begin{document}
+
+\begin{titlingpage}
+\input{Chapters/TitlePage.tex}
+\end{titlingpage}
+
+\frontmatter
+\include{Chapters/Abstract}
+\include{Chapters/Acknowledgements}
+
+\tableofcontents
+\newpage
+\listoffigures 
+\newpage
+\listoftables
+
+\mainmatter
+\include{Chapters/Chapter_1}
+
+\begin{appendices}
+\include{Chapters/Appendix_A}
+\end{appendices}
+
+\printindex
+\bibliographystyle{abbrv}
+\bibliography{Bibliography/bibliography}
+
+\end{document}

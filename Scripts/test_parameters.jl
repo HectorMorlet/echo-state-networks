@@ -16,7 +16,7 @@ lo_test_0_01 = vec(readdlm(joinpath(@__DIR__, "..", "Data", "lorenz_test_0_01.tx
 
 # testing_params = create_testing_params(mask_states_b4_readout=true)
 
-# test_multi_step_multi_trial_singular(
+# test_params_multi_trial_singular(
 #         lo_train_0_01, lo_test_0_01, 4, 100;
 #         error_metric=RMSE, trials=1,
 #         testing_params=testing_params
@@ -75,46 +75,96 @@ println("### deterministic ###")
 println("#####################")
 
 
-println("\n\n\n##########\n\nTESTING ON_layered vs readout switching over n_steps\n\n##########\n")
 
-testing_params = create_testing_params(
-    stochastic=false,
-    stochastic_rescale_V_rec=false,
-    readout_switching=true
-)
+
+println("\n\n\n##########\n\nTESTING n_steps for single steps\n\n##########\n")
+
+println("TESTING total_k = 468, m = 1, 2, 3, 4\n")
+
 n_steps_test = [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100]
 
-num_partitions = test_multi_step(
+num_partitions = test_params(
     file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
     "n_steps", n_steps_test, 
-    Dict("m" => 1, "k" => part_lcm*6),
-    testing_params = testing_params
+    Dict("m" => 1, "k" => part_lcm*6)
 )
 
-num_partitions = test_multi_step(
+@assert(num_partitions == 1)
+
+num_partitions = test_params(
     file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
     "n_steps", n_steps_test, 
-    Dict("m" => 2, "k" => part_lcm*6),
-    testing_params = testing_params
+    Dict("m" => 2, "k" => part_lcm*3)
 )
 
-num_partitions = test_multi_step(
+@assert(num_partitions == 2)
+
+num_partitions = test_params(
     file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
     "n_steps", n_steps_test, 
-    Dict("m" => 3, "k" => part_lcm*6),
-    testing_params = testing_params
+    Dict("m" => 3, "k" => part_lcm)
 )
 
-num_partitions = test_multi_step(
+@assert(num_partitions == 6)
+
+num_partitions = test_params(
     file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
-    "n_steps", n_steps_test,
-    Dict("m" => 4, "k" => part_lcm*6),
-    testing_params = testing_params
+    lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
+    "n_steps", n_steps_test, 
+    Dict("m" => 4, "k" => div(part_lcm*6, 13))
 )
+
+@assert(num_partitions == 13)
+
+
+
+println("TESTING total_k = 288, m = 1, 2, 3, 4\n")
+
+min_subreservoir_k = 48
+
+n_steps_test = [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100]
+
+num_partitions = test_params(
+    file_name, tests, 
+    lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
+    "n_steps", n_steps_test, 
+    Dict("m" => 1, "k" => min_subreservoir_k*6)
+)
+
+@assert(num_partitions == 1)
+
+num_partitions = test_params(
+    file_name, tests, 
+    lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
+    "n_steps", n_steps_test, 
+    Dict("m" => 2, "k" => min_subreservoir_k*3)
+)
+
+@assert(num_partitions == 2)
+
+num_partitions = test_params(
+    file_name, tests, 
+    lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
+    "n_steps", n_steps_test, 
+    Dict("m" => 3, "k" => min_subreservoir_k)
+)
+
+@assert(num_partitions == 6)
+
+num_partitions = test_params(
+    file_name, tests, 
+    lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
+    "n_steps", n_steps_test, 
+    Dict("m" => 4, "k" => div(min_subreservoir_k*6, 13))
+)
+
+@assert(num_partitions == 13)
+
+@assert(false)
+
 
 
 
@@ -127,36 +177,36 @@ println("TESTING total_k = 468, m = 1, 2, 3, 4\n")
 
 n_steps_test = [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100]
 
-num_partitions = test_multi_step(
+num_partitions = test_params(
     file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
     "n_steps", n_steps_test, 
     Dict("m" => 1, "k" => part_lcm*6)
 )
 
 @assert(num_partitions == 1)
 
-num_partitions = test_multi_step(
+num_partitions = test_params(
     file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
     "n_steps", n_steps_test, 
     Dict("m" => 2, "k" => part_lcm*3)
 )
 
 @assert(num_partitions == 2)
 
-num_partitions = test_multi_step(
+num_partitions = test_params(
     file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
     "n_steps", n_steps_test, 
     Dict("m" => 3, "k" => part_lcm)
 )
 
 @assert(num_partitions == 6)
 
-num_partitions = test_multi_step(
+num_partitions = test_params(
     file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
     "n_steps", n_steps_test, 
     Dict("m" => 4, "k" => div(part_lcm*6, 13))
 )
@@ -169,16 +219,16 @@ num_partitions = test_multi_step(
 
 println("TESTING k = 50, m = 3\n")
 
-num_partitions = test_multi_step(
+num_partitions = test_params(
     file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
     "n_steps", [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], 
     Dict("m" => 3, "k" => 50)
 )
 
-test_multi_step(
+test_params(
     file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
     "n_steps", [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], 
     Dict("m" => 1, "k" => 300)
 )
@@ -190,16 +240,16 @@ test_multi_step(
 
 println("TESTING k = 100, m = 3\n")
 
-num_partitions = test_multi_step(
+num_partitions = test_params(
     file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
     "n_steps", [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], 
     Dict("m" => 3, "k" => 100)
 )
 
-test_multi_step(
+test_params(
     file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
     "n_steps", [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], 
     Dict("m" => 1, "k" => 100 * num_partitions)
 )
@@ -211,9 +261,9 @@ test_multi_step(
 
 println("TESTING k = 650, m = 1\n")
 
-num_partitions = test_multi_step(
+num_partitions = test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "n_steps", [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100],
     Dict("m" => 1, "k" => 650)
 )
@@ -224,9 +274,9 @@ num_partitions = test_multi_step(
 
 println("TESTING k = 50, m = 4\n")
 
-num_partitions = test_multi_step(
+num_partitions = test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "n_steps", [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100],
     Dict("m" => 4, "k" => 50)
 )
@@ -237,18 +287,18 @@ num_partitions = test_multi_step(
 
 println("TESTING k = 1300, m = 1\n")
 
-num_partitions = test_multi_step(
+num_partitions = test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "n_steps", [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100],
     Dict("m" => 1, "k" => 1300)
 )
 
 println("TESTING k = 100, m = 4\n")
 
-num_partitions = test_multi_step(
+num_partitions = test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "n_steps", [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100],
     Dict("m" => 4, "k" => 100)
 )
@@ -269,23 +319,23 @@ test_m = 1
 
 println("\nTESTING m = 1\n##########\n")
 
-num_partitions = test_multi_step(
+num_partitions = test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k",
     total_ks,
     Dict("m"=>test_m, "n_steps"=>1))
 
-test_multi_step(
+test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks,
     Dict("m" => test_m, "n_steps" => 5)
 )
 
-test_multi_step(
+test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks,
     Dict("m" => test_m, "n_steps" => 50)
 )
@@ -298,23 +348,23 @@ test_m = 2
 
 println("\nTESTING m = 2\n##########\n")
 
-num_parts = test_multi_step(
+num_parts = test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 2,
     Dict("m" => test_m, "n_steps" => 1)
 )
 
-test_multi_step(
+test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 2,
     Dict("m" => test_m, "n_steps" => 5)
 )
 
-test_multi_step(
+test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 2,
     Dict("m" => test_m, "n_steps" => 50)
 )
@@ -327,23 +377,23 @@ test_m = 3
 println("\nTESTING m = 3\n##########\n")
 
 
-num_parts = test_multi_step(
+num_parts = test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 6,
     Dict("m" => test_m, "n_steps" => 1)
 )
 
-test_multi_step(
+test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 6,
     Dict("m" => test_m, "n_steps" => 5)
 )
 
-test_multi_step(
+test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 6,
     Dict("m" => test_m, "n_steps" => 50)
 )
@@ -356,28 +406,72 @@ test_m = 4
 println("\nTESTING m = 4\n##########\n")
 
 
-num_parts = test_multi_step(
+num_parts = test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 13,
     Dict("m" => test_m, "n_steps" => 1)
 )
 
-test_multi_step(
+test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 13,
     Dict("m" => test_m, "n_steps" => 5)
 )
 
-test_multi_step(
+test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 13,
     Dict("m" => test_m, "n_steps" => 50)
 )
 
 println("Num partitions: ", num_parts)
+
+
+
+
+println("\n\n\n##########\n\nTESTING ON_layered vs readout switching over n_steps\n\n##########\n")
+
+testing_params = create_testing_params(
+    stochastic=false,
+    stochastic_rescale_V_rec=false,
+    readout_switching=true
+)
+n_steps_test = [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100]
+
+num_partitions = test_params(
+    file_name, tests, 
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
+    "n_steps", n_steps_test, 
+    Dict("m" => 1, "k" => part_lcm*6),
+    testing_params = testing_params
+)
+
+num_partitions = test_params(
+    file_name, tests, 
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
+    "n_steps", n_steps_test, 
+    Dict("m" => 2, "k" => part_lcm*6),
+    testing_params = testing_params
+)
+
+num_partitions = test_params(
+    file_name, tests, 
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
+    "n_steps", n_steps_test, 
+    Dict("m" => 3, "k" => part_lcm*6),
+    testing_params = testing_params
+)
+
+num_partitions = test_params(
+    file_name, tests, 
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
+    "n_steps", n_steps_test,
+    Dict("m" => 4, "k" => part_lcm*6),
+    testing_params = testing_params
+)
 
 
 
@@ -425,9 +519,9 @@ println("TESTING total_k = 468, m = 1, 2, 3, 4\n")
 
 n_steps_test = [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100]
 
-num_partitions = test_multi_step(
+num_partitions = test_params(
     file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
     "n_steps", n_steps_test, 
     Dict("m" => 1, "k" => part_lcm*6),
     testing_params=testing_params
@@ -435,9 +529,9 @@ num_partitions = test_multi_step(
 
 @assert(num_partitions == 1)
 
-num_partitions = test_multi_step(
+num_partitions = test_params(
     file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
     "n_steps", n_steps_test, 
     Dict("m" => 2, "k" => part_lcm*3),
     testing_params=testing_params
@@ -445,9 +539,9 @@ num_partitions = test_multi_step(
 
 @assert(num_partitions == 2)
 
-num_partitions = test_multi_step(
+num_partitions = test_params(
     file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
     "n_steps", n_steps_test, 
     Dict("m" => 3, "k" => part_lcm),
     testing_params=testing_params
@@ -455,9 +549,9 @@ num_partitions = test_multi_step(
 
 @assert(num_partitions == 6)
 
-num_partitions = test_multi_step(
+num_partitions = test_params(
     file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01", 
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
     "n_steps", n_steps_test, 
     Dict("m" => 4, "k" => div(part_lcm*6, 13)),
     testing_params=testing_params
@@ -484,25 +578,25 @@ test_m = 1
 
 println("\nTESTING m = 1\n##########\n")
 
-num_partitions = test_multi_step(
+num_partitions = test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k",
     total_ks,
     Dict("m"=>test_m, "n_steps"=>1),
     testing_params=testing_params)
 
-test_multi_step(
+test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks,
     Dict("m" => test_m, "n_steps" => 5),
     testing_params=testing_params
 )
 
-test_multi_step(
+test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks,
     Dict("m" => test_m, "n_steps" => 50),
     testing_params=testing_params
@@ -516,25 +610,25 @@ test_m = 2
 
 println("\nTESTING m = 2\n##########\n")
 
-num_parts = test_multi_step(
+num_parts = test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 2,
     Dict("m" => test_m, "n_steps" => 1),
     testing_params=testing_params
 )
 
-test_multi_step(
+test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 2,
     Dict("m" => test_m, "n_steps" => 5),
     testing_params=testing_params
 )
 
-test_multi_step(
+test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 2,
     Dict("m" => test_m, "n_steps" => 50),
     testing_params=testing_params
@@ -548,25 +642,25 @@ test_m = 3
 println("\nTESTING m = 3\n##########\n")
 
 
-num_parts = test_multi_step(
+num_parts = test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 6,
     Dict("m" => test_m, "n_steps" => 1),
     testing_params=testing_params
 )
 
-test_multi_step(
+test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 6,
     Dict("m" => test_m, "n_steps" => 5),
     testing_params=testing_params
 )
 
-test_multi_step(
+test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 6,
     Dict("m" => test_m, "n_steps" => 50),
     testing_params=testing_params
@@ -580,25 +674,25 @@ test_m = 4
 println("\nTESTING m = 4\n##########\n")
 
 
-num_parts = test_multi_step(
+num_parts = test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 13,
     Dict("m" => test_m, "n_steps" => 1),
     testing_params=testing_params
 )
 
-test_multi_step(
+test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 13,
     Dict("m" => test_m, "n_steps" => 5),
     testing_params=testing_params
 )
 
-test_multi_step(
+test_params(
     file_name, tests,
-    lo_train_0_01, lo_test_0_01, "Lorenz 0_01",
+    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
     "k", total_ks .÷ 13,
     Dict("m" => test_m, "n_steps" => 50),
     testing_params=testing_params
