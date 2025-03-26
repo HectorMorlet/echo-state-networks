@@ -18,7 +18,7 @@ using .EchoStateNetworksStochastic
 include("EchoStateNetworksReadoutSwitching.jl")
 using .EchoStateNetworksReadoutSwitching
 
-export TestingParameters, create_testing_params, compare_preds, create_pred_for_params_single_step, create_pred_for_params_free_run, create_pred_for_params_multi_step, test_params, test_multi_step_multi_trial, graph_multi_step_RMSE_vs_n_steps, test_single_step, test_freerun, RMSE, test_multi_step_multi_trial_singular, find_test, check_if_test_exists, test_multi_step_n_steps, test_multi_step_k, save_file, chart_tests, quick_graph_series
+export TestingParameters, create_testing_params, compare_preds, create_pred_for_params_single_step, create_pred_for_params_free_run, create_pred_for_params_multi_step, test_params, test_multi_step_multi_trial, graph_multi_step_RMSE_vs_n_steps, test_single_step, test_freerun, RMSE, test_multi_step_multi_trial_singular, find_test, check_if_test_exists, test_multi_step_n_steps, test_multi_step, test_multi_step_k, save_file, chart_tests, quick_graph_series
 
 struct TestingParameters
     mask_states_b4_readout::Bool
@@ -207,96 +207,96 @@ end
 #     compare_preds(lo_test, vanilla_preds, ON_preds, from, to, calculate_error=false)
 # end
 
-# function create_pred_for_params_multi_step(lo_train, lo_test, m, chunk_length; k = 100, d = k*0.05, ρ = 1.1, α = 1.0, η = 1/maximum(lo_train), β = 0.001, w = 1, τ = 1, return_num_partitions=false, testing_params=create_testing_params())
-#     R, starting_state, unique_partitions_train, ESN_params, starting_part_symbol, ON_part_adjacency = get_starting_state_and_R(lo_train, m, k, d, ρ, α, η, β, w, τ, testing_params=testing_params)
+function create_pred_for_params_multi_step(lo_train, lo_test, m, chunk_length; k = 100, d = k*0.05, ρ = 1.1, α = 1.0, η = 1/maximum(lo_train), β = 0.001, w = 1, τ = 1, return_num_partitions=false, testing_params=create_testing_params())
+    R, starting_state, unique_partitions_train, ESN_params, starting_part_symbol, ON_part_adjacency = get_starting_state_and_R(lo_train, m, k, d, ρ, α, η, β, w, τ, testing_params=testing_params)
     
-#     println("Created reservoir of size: ", size(starting_state))
+    println("Created reservoir of size: ", size(starting_state))
 
-#     part_symbols_test, unique_partitions_test = create_ordinal_partition(
-#         [lo_train[end-(m-1)*τ+1:end]; lo_test], m, w, τ, unique_partitions=unique_partitions_train)
-#     part_symbols_test = part_symbols_test[(m-1)*τ+1:end]
+    part_symbols_test, unique_partitions_test = create_ordinal_partition(
+        [lo_train[end-(m-1)*τ+1:end]; lo_test], m, w, τ, unique_partitions=unique_partitions_train)
+    part_symbols_test = part_symbols_test[(m-1)*τ+1:end]
 
-#     # println(part_symbols_test)
-#     # @assert(false)
+    # println(part_symbols_test)
+    # @assert(false)
 
-#     @assert(all(x -> x in unique_partitions_train, unique_partitions_test))
-#     @assert(count(x -> x === nothing, part_symbols_test) == 0)
-#     @assert(length(part_symbols_test) == length(lo_test))
+    @assert(all(x -> x in unique_partitions_train, unique_partitions_test))
+    @assert(count(x -> x === nothing, part_symbols_test) == 0)
+    @assert(length(part_symbols_test) == length(lo_test))
 
-#     # why do part_symbols_test start with nothing here?
+    # why do part_symbols_test start with nothing here?
 
-#     if testing_params.stochastic
-#         _, test_states = one_step_pred_stochastic(
-#             lo_test, ESN_params, R, S=starting_state, partition_symbols=part_symbols_test, ON_part_adjacency=ON_part_adjacency, rescale_V_rec = testing_params.stochastic_rescale_V_rec
-#         )
-#     elseif testing_params.readout_switching
-#         _, test_states = one_step_pred_readout_switching(
-#             lo_test, ESN_params, R, part_symbols_test, S=starting_state
-#         )
-#     else
-#         _, test_states = one_step_pred(lo_test, ESN_params, R, testing_params, S=starting_state, partition_symbols=part_symbols_test)
-#     end
+    if testing_params.stochastic
+        _, test_states = one_step_pred_stochastic(
+            lo_test, ESN_params, R, S=starting_state, partition_symbols=part_symbols_test, ON_part_adjacency=ON_part_adjacency, rescale_V_rec = testing_params.stochastic_rescale_V_rec
+        )
+    elseif testing_params.readout_switching
+        _, test_states = one_step_pred_readout_switching(
+            lo_test, ESN_params, R, part_symbols_test, S=starting_state
+        )
+    else
+        _, test_states = one_step_pred(lo_test, ESN_params, R, testing_params, S=starting_state, partition_symbols=part_symbols_test)
+    end
 
-#     preds = []
+    preds = []
 
-#     pred = lo_train[end]
-#     state = starting_state
-#     @assert(starting_part_symbol !== nothing)
-#     part_symbol = starting_part_symbol
-#     partition_window = lo_train[end-((m-1)*τ):end]
+    pred = lo_train[end]
+    state = starting_state
+    @assert(starting_part_symbol !== nothing)
+    part_symbol = starting_part_symbol
+    partition_window = lo_train[end-((m-1)*τ):end]
     
-#     chunk_i = 0
-#     while chunk_i+chunk_length <= length(lo_test)
-#         for _ in 1:chunk_length
-#             if testing_params.stochastic
-#                 pred, state = one_step_pred_stochastic(
-#                     pred, ESN_params, R, S = state, partition_symbols=part_symbol, ON_part_adjacency=ON_part_adjacency, rescale_V_rec = testing_params.stochastic_rescale_V_rec
-#                 )
-#             elseif testing_params.readout_switching
-#                 pred, state = one_step_pred_readout_switching(
-#                     pred, ESN_params, R, part_symbol, S = state
-#                 )
-#             else
-#                 pred, state = one_step_pred(
-#                     pred, ESN_params, R, testing_params, S = state, partition_symbols=part_symbol
-#                 )
-#             end
+    chunk_i = 0
+    while chunk_i+chunk_length <= length(lo_test)
+        for _ in 1:chunk_length
+            if testing_params.stochastic
+                pred, state = one_step_pred_stochastic(
+                    pred, ESN_params, R, S = state, partition_symbols=part_symbol, ON_part_adjacency=ON_part_adjacency, rescale_V_rec = testing_params.stochastic_rescale_V_rec
+                )
+            elseif testing_params.readout_switching
+                pred, state = one_step_pred_readout_switching(
+                    pred, ESN_params, R, part_symbol, S = state
+                )
+            else
+                pred, state = one_step_pred(
+                    pred, ESN_params, R, testing_params, S = state, partition_symbols=part_symbol
+                )
+            end
             
-#             pred = pred[1]
-#             state = state[end,:]
-#             partition_window = [partition_window[2:end]; pred]
+            pred = pred[1]
+            state = state[end,:]
+            partition_window = [partition_window[2:end]; pred]
             
-#             part_symbol = find_ordinal_partition_symbol(partition_window, m, τ, unique_partitions_train)
+            part_symbol = find_ordinal_partition_symbol(partition_window, m, τ, unique_partitions_train)
 
-#             push!(preds, pred)
-#         end
+            push!(preds, pred)
+        end
 
-#         chunk_i += chunk_length
+        chunk_i += chunk_length
 
-#         pred = lo_test[chunk_i]
-#         state = test_states[chunk_i, :]
-#         part_symbol = part_symbols_test[chunk_i]
-#         @assert(part_symbol !== nothing)
-#         if chunk_i-((m-1)*τ+1) > 0
-#             partition_window = lo_test[chunk_i-((m-1)*τ+1):chunk_i]
-#         else
-#             partition_window = [lo_train[end-((m-1)*τ+1)+chunk_i:end]; lo_test[1:chunk_i]]
-#         end
-#     end
+        pred = lo_test[chunk_i]
+        state = test_states[chunk_i, :]
+        part_symbol = part_symbols_test[chunk_i]
+        @assert(part_symbol !== nothing)
+        if chunk_i-((m-1)*τ+1) > 0
+            partition_window = lo_test[chunk_i-((m-1)*τ+1):chunk_i]
+        else
+            partition_window = [lo_train[end-((m-1)*τ+1)+chunk_i:end]; lo_test[1:chunk_i]]
+        end
+    end
     
-#     if !return_num_partitions
-#         return(preds)
-#     else
-#         return(preds, length(unique_partitions_train))
-#     end
-# end
+    if !return_num_partitions
+        return(preds)
+    else
+        return(preds, length(unique_partitions_train))
+    end
+end
 
-# function test_multi_step(lo_train, lo_test, m, layer_k; n_steps=5, from=0, to=100, equal_total_k=true, ignore_first=100, testing_params=create_testing_params())
-#     ON_preds_multistep, num_partitions = create_pred_for_params_multi_step(lo_train, lo_test, 3, n_steps; k = layer_k, return_num_partitions=true, testing_params=testing_params)
-#     vanilla_k = equal_total_k ? layer_k*num_partitions : layer_k
-#     vanilla_preds_multistep = create_pred_for_params_multi_step(lo_train, lo_test, 1, n_steps; k = vanilla_k)
-#     compare_preds(lo_test, vanilla_preds_multistep, ON_preds_multistep, from, to, offset=0, mark_every=n_steps, ignore_first=ignore_first)
-# end
+function test_multi_step(lo_train, lo_test, m, layer_k; n_steps=5, from=0, to=100, equal_total_k=true, ignore_first=100, testing_params=create_testing_params())
+    ON_preds_multistep, num_partitions = create_pred_for_params_multi_step(lo_train, lo_test, 3, n_steps; k = layer_k, return_num_partitions=true, testing_params=testing_params)
+    vanilla_k = equal_total_k ? layer_k*num_partitions : layer_k
+    vanilla_preds_multistep = create_pred_for_params_multi_step(lo_train, lo_test, 1, n_steps; k = vanilla_k)
+    compare_preds(lo_test, vanilla_preds_multistep, ON_preds_multistep, from, to, offset=0, mark_every=n_steps, ignore_first=ignore_first)
+end
 
 # function test_multi_step_multi_trial(lo_train, lo_test, m, layer_k; n_steps=5, equal_total_k=true, ignore_first=100, trials=10, verbose=true, testing_params=create_testing_params())
 #     vanilla_RMSEs, ON_network_RMSEs, vanilla_turning_RMSEs, ON_network_turning_RMSEs = [], [], [], []
@@ -454,6 +454,7 @@ function find_existing_test(tests, test)
         "readout_switching" => test_copy["testing_params"].readout_switching
     )
     test_copy["error_funcs"] = ["$(err_func)" for err_func in test["error_funcs"]]
+    test_copy["aggregation_funcs"] = ["$(agg_func)" for agg_func in test["aggregation_funcs"]]
 
     # Convert any vectors to Any[]
     for (key, value) in test_copy
@@ -465,7 +466,7 @@ function find_existing_test(tests, test)
 
     for existing_test in tests
         existing_test_copy = deepcopy(existing_test)
-        pop!(existing_test_copy, "errors", nothing)
+        pop!(existing_test_copy, "measurements", nothing)
         pop!(existing_test_copy, "date", nothing)
 
         # Sort any vectors in existing test

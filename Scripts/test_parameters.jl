@@ -13,26 +13,8 @@ lo_train_0_01 = vec(readdlm(joinpath(@__DIR__, "..", "Data", "lorenz_train_0_01.
 lo_test_0_01 = vec(readdlm(joinpath(@__DIR__, "..", "Data", "lorenz_test_0_01.txt")))
 
 
-
-# testing_params = create_testing_params(mask_states_b4_readout=true)
-
-# test_params_multi_trial_singular(
-#         lo_train_0_01, lo_test_0_01, 4, 100;
-#         error_metric=RMSE, trials=1,
-#         testing_params=testing_params
-#     )
-
-
-# preds = create_pred_for_params_multi_step(
-#     lo_train_0_01, lo_test_0_01, 4, 10;
-#     k = 100, testing_params=testing_params
-# )
-
-# quick_graph_series(preds)
-
-# graph_multi_step_RMSE_vs_n_steps(lo_train_0_01, lo_test_0_01, [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], 2, 50; ignore_first=100, trials=10)
-
-
+ro_train_0_01 = vec(readdlm(joinpath(@__DIR__, "..", "Data", "rossler_train_0_01.txt")))
+ro_test_0_01 = vec(readdlm(joinpath(@__DIR__, "..", "Data", "rossler_test_0_01.txt")))
 
 
 
@@ -47,670 +29,128 @@ else
     []
 end
 
-# for test in tests
-#     if test["testing_parameter"] == "n_steps"
-#         if test["m"] == 3
-#             test["num_partitions"] = 6
-#         end
-#         test["total_k"] = test["k"]*test["num_partitions"]
-#     end
-# end
-
-# save_file(file_name, tests)
-
-# for test in tests
-#     if !haskey(test["testing_params"], "readout_switching")
-#         test["testing_params"]["readout_switching"] = false
-#     end
-# end
-
-# save_file("tests.json", tests)
-
-
 part_lcm = lcm(6, 13) # 78
 
 
-println("#####################")
-println("### deterministic ###")
-println("#####################")
+
+
+n_steps_test = [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100]
+ms = [1, 2, 3, 4]
 
 
 
-
-println("\n\n\n##########\n\nTESTING n_steps for single steps\n\n##########\n")
+println("\n\n\n##########\n\nTESTING n_steps\n\n##########\n")
 
 println("TESTING total_k = 468, m = 1, 2, 3, 4\n")
 
-n_steps_test = [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100]
+testing_paramss = [
+    create_testing_params(),
+    create_testing_params(stochastic=true, stochastic_rescale_V_rec=true)
+]
 
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 1, "k" => part_lcm*6)
-)
+ks = [part_lcm*6, part_lcm*3, part_lcm, div(part_lcm*6, 13)]
 
-@assert(num_partitions == 1)
+data_label = ["Lorenz 0_01", "Rossler 0_01"]
+train_data = [lo_train_0_01, ro_train_0_01]
+test_data = [lo_test_0_01, ro_test_0_01]
 
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 2, "k" => part_lcm*3)
-)
-
-@assert(num_partitions == 2)
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 3, "k" => part_lcm)
-)
-
-@assert(num_partitions == 6)
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 4, "k" => div(part_lcm*6, 13))
-)
-
-@assert(num_partitions == 13)
+for data_i in 1:2
+    println("\nTESTING data ", data_label[data_i])
+    for prediction_type in ["multi_step", "single_step"]
+        println("\nTESTING ", prediction_type)
+        for testing_params in testing_paramss
+            println("\nTESTING ", testing_params)
+            for i in 1:4
+                num_partitions = test_params(
+                    file_name, tests, 
+                    train_data[data_i], test_data[data_i], prediction_type, data_label[data_i], 
+                    "n_steps", n_steps_test, 
+                    Dict("m" => ms[i], "k" => ks[i])
+                )
+            end
+        end
+    end
+end
 
 
 
-println("TESTING total_k = 288, m = 1, 2, 3, 4\n")
+println("TESTING single step total_k = 288, m = 1, 2, 3, 4\n")
+
+total_k = 8*6*13
+ks = [total_k, total_k÷2, total_k÷6, total_k÷13]
+
+for i in 1:4
+    num_partitions = test_params(
+        file_name, tests, 
+        lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
+        "n_steps", n_steps_test, 
+        Dict("m" => ms[i], "k" => ks[i])
+    )
+end
+
+
+
+println("TESTING single step total_k = 288, m = 1, 2, 3, 4\n")
 
 min_subreservoir_k = 48
 
-n_steps_test = [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100]
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 1, "k" => min_subreservoir_k*6)
-)
-
-@assert(num_partitions == 1)
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 2, "k" => min_subreservoir_k*3)
-)
-
-@assert(num_partitions == 2)
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 3, "k" => min_subreservoir_k)
-)
-
-@assert(num_partitions == 6)
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 4, "k" => div(min_subreservoir_k*6, 13))
-)
-
-@assert(num_partitions == 13)
-
-@assert(false)
-
-
-
-
-println("\n\n\n##########\n\nTESTING n_steps\n\n##########\n")
-
-
-
-
-println("TESTING total_k = 468, m = 1, 2, 3, 4\n")
-
-n_steps_test = [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100]
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 1, "k" => part_lcm*6)
-)
-
-@assert(num_partitions == 1)
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 2, "k" => part_lcm*3)
-)
-
-@assert(num_partitions == 2)
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 3, "k" => part_lcm)
-)
-
-@assert(num_partitions == 6)
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 4, "k" => div(part_lcm*6, 13))
-)
-
-@assert(num_partitions == 13)
-
-
-
-
-
-println("TESTING k = 50, m = 3\n")
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
-    "n_steps", [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], 
-    Dict("m" => 3, "k" => 50)
-)
-
-test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
-    "n_steps", [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], 
-    Dict("m" => 1, "k" => 300)
-)
-
-
-
-
-
-
-println("TESTING k = 100, m = 3\n")
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
-    "n_steps", [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], 
-    Dict("m" => 3, "k" => 100)
-)
-
-test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
-    "n_steps", [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100], 
-    Dict("m" => 1, "k" => 100 * num_partitions)
-)
-
-
-
-
-
-
-println("TESTING k = 650, m = 1\n")
-
-num_partitions = test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "n_steps", [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100],
-    Dict("m" => 1, "k" => 650)
-)
-
-
-
-
-
-println("TESTING k = 50, m = 4\n")
-
-num_partitions = test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "n_steps", [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100],
-    Dict("m" => 4, "k" => 50)
-)
-
-
-
-
-
-println("TESTING k = 1300, m = 1\n")
-
-num_partitions = test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "n_steps", [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100],
-    Dict("m" => 1, "k" => 1300)
-)
-
-println("TESTING k = 100, m = 4\n")
-
-num_partitions = test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "n_steps", [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100],
-    Dict("m" => 4, "k" => 100)
-)
-
-
-
+ks = [48*6, 48*3, 48]
+
+for i in 1:3
+    num_partitions = test_params(
+        file_name, tests, 
+        lo_train_0_01, lo_test_0_01, "single_step", "Lorenz 0_01", 
+        "n_steps", n_steps_test, 
+        Dict("m" => ms[i], "k" => ks[i])
+    )
+end
+
+
+# up to here
+
+
+for k in [50, 100]
+    println("TESTING subreservoir k = $(k), m = 1, 2, 3, 4\n")
+    for m in 1:4
+        num_partitions = test_params(
+            file_name, tests, 
+            lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
+            "n_steps", n_steps_test, 
+            Dict("m" => m, "k" => k)
+        )
+    end
+end
+
+
+
+println("\n\nTESTING readout switching\n")
+
+testing_params = create_testing_params(readout_switching=true)
+for m in 1:4
+    num_partitions = test_params(
+        file_name, tests, 
+        lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
+        "n_steps", n_steps_test, 
+        Dict("m" => m, "k" => part_lcm*6),
+        testing_params = testing_params
+    )
+end
 
 
 
 println("\n\n\n##########\n\nTESTING Ks\n\n##########\n")
-# Testing k
 
-
-total_ks = [part_lcm*2, part_lcm*4, part_lcm*8, part_lcm*16]
-
-
-test_m = 1
-
-println("\nTESTING m = 1\n##########\n")
-
-num_partitions = test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k",
-    total_ks,
-    Dict("m"=>test_m, "n_steps"=>1))
-
-test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks,
-    Dict("m" => test_m, "n_steps" => 5)
-)
-
-test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks,
-    Dict("m" => test_m, "n_steps" => 50)
-)
-
-println("Num partitions: ", num_partitions)
-
-
-
-test_m = 2
-
-println("\nTESTING m = 2\n##########\n")
-
-num_parts = test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 2,
-    Dict("m" => test_m, "n_steps" => 1)
-)
-
-test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 2,
-    Dict("m" => test_m, "n_steps" => 5)
-)
-
-test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 2,
-    Dict("m" => test_m, "n_steps" => 50)
-)
-
-println("Num partitions: ", num_parts)
-
-
-test_m = 3
-
-println("\nTESTING m = 3\n##########\n")
-
-
-num_parts = test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 6,
-    Dict("m" => test_m, "n_steps" => 1)
-)
-
-test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 6,
-    Dict("m" => test_m, "n_steps" => 5)
-)
-
-test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 6,
-    Dict("m" => test_m, "n_steps" => 50)
-)
-
-println("Num partitions: ", num_parts)
-
-
-test_m = 4
-
-println("\nTESTING m = 4\n##########\n")
-
-
-num_parts = test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 13,
-    Dict("m" => test_m, "n_steps" => 1)
-)
-
-test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 13,
-    Dict("m" => test_m, "n_steps" => 5)
-)
-
-test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 13,
-    Dict("m" => test_m, "n_steps" => 50)
-)
-
-println("Num partitions: ", num_parts)
-
-
-
-
-println("\n\n\n##########\n\nTESTING ON_layered vs readout switching over n_steps\n\n##########\n")
-
-testing_params = create_testing_params(
-    stochastic=false,
-    stochastic_rescale_V_rec=false,
-    readout_switching=true
-)
-n_steps_test = [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100]
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 1, "k" => part_lcm*6),
-    testing_params = testing_params
-)
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 2, "k" => part_lcm*6),
-    testing_params = testing_params
-)
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 3, "k" => part_lcm*6),
-    testing_params = testing_params
-)
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test,
-    Dict("m" => 4, "k" => part_lcm*6),
-    testing_params = testing_params
-)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-println("##################")
-println("### stochastic ###")
-println("##################")
-
-
-testing_params = create_testing_params(stochastic=true, stochastic_rescale_V_rec=true)
-
-
-println("\n\n\n##########\n\nTESTING n_steps\n\n##########\n")
-
-
-
-println("TESTING total_k = 468, m = 1, 2, 3, 4\n")
-
-n_steps_test = [1, 2, 3, 5, 10, 20, 30, 40, 50, 70, 100]
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 1, "k" => part_lcm*6),
-    testing_params=testing_params
-)
-
-@assert(num_partitions == 1)
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 2, "k" => part_lcm*3),
-    testing_params=testing_params
-)
-
-@assert(num_partitions == 2)
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 3, "k" => part_lcm),
-    testing_params=testing_params
-)
-
-@assert(num_partitions == 6)
-
-num_partitions = test_params(
-    file_name, tests, 
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01", 
-    "n_steps", n_steps_test, 
-    Dict("m" => 4, "k" => div(part_lcm*6, 13)),
-    testing_params=testing_params
-)
-
-@assert(num_partitions == 13)
-
-
-
-
-
-
-
-
-
-println("\n\n\n##########\n\nTESTING Ks\n\n##########\n")
-# Testing k
-
-
-total_ks = [part_lcm*2, part_lcm*4, part_lcm*8, part_lcm*16]
-
-
-test_m = 1
-
-println("\nTESTING m = 1\n##########\n")
-
-num_partitions = test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k",
-    total_ks,
-    Dict("m"=>test_m, "n_steps"=>1),
-    testing_params=testing_params)
-
-test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks,
-    Dict("m" => test_m, "n_steps" => 5),
-    testing_params=testing_params
-)
-
-test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks,
-    Dict("m" => test_m, "n_steps" => 50),
-    testing_params=testing_params
-)
-
-println("Num partitions: ", num_partitions)
-
-
-
-test_m = 2
-
-println("\nTESTING m = 2\n##########\n")
-
-num_parts = test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 2,
-    Dict("m" => test_m, "n_steps" => 1),
-    testing_params=testing_params
-)
-
-test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 2,
-    Dict("m" => test_m, "n_steps" => 5),
-    testing_params=testing_params
-)
-
-test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 2,
-    Dict("m" => test_m, "n_steps" => 50),
-    testing_params=testing_params
-)
-
-println("Num partitions: ", num_parts)
-
-
-test_m = 3
-
-println("\nTESTING m = 3\n##########\n")
-
-
-num_parts = test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 6,
-    Dict("m" => test_m, "n_steps" => 1),
-    testing_params=testing_params
-)
-
-test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 6,
-    Dict("m" => test_m, "n_steps" => 5),
-    testing_params=testing_params
-)
-
-test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 6,
-    Dict("m" => test_m, "n_steps" => 50),
-    testing_params=testing_params
-)
-
-println("Num partitions: ", num_parts)
-
-
-test_m = 4
-
-println("\nTESTING m = 4\n##########\n")
-
-
-num_parts = test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 13,
-    Dict("m" => test_m, "n_steps" => 1),
-    testing_params=testing_params
-)
-
-test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 13,
-    Dict("m" => test_m, "n_steps" => 5),
-    testing_params=testing_params
-)
-
-test_params(
-    file_name, tests,
-    lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
-    "k", total_ks .÷ 13,
-    Dict("m" => test_m, "n_steps" => 50),
-    testing_params=testing_params
-)
-
-println("Num partitions: ", num_parts)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+total_ks = [part_lcm, part_lcm*2, part_lcm*4, part_lcm*8, part_lcm*16]
+for m in 1:4
+    println("\nTESTING m = $(m)\n##########\n")
+
+    for n_steps in [1, 5, 50]
+        num_partitions = test_params(
+            file_name, tests,
+            lo_train_0_01, lo_test_0_01, "multi_step", "Lorenz 0_01",
+            "k", total_ks,
+            Dict("m" => m, "n_steps" => n_steps))
+        println(num_partitions)
+    end
+end
 

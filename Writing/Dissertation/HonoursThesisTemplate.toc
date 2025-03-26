@@ -1,0 +1,12 @@
+\contentsline {chapter}{Abstract}{i}{chapter*.1}%
+\contentsline {chapter}{Acknowledgements}{iii}{chapter*.2}%
+\contentsline {chapter}{Contents}{iv}{section*.3}%
+\contentsline {chapter}{List of Figures}{v}{section*.4}%
+\contentsline {chapter}{List of Tables}{vi}{section*.5}%
+\contentsline {chapter}{\chapternumberline {1}Echo State Networks}{1}{chapter.1}%
+\contentsline {chapter}{\chapternumberline {2}Ordinal Partitions}{3}{chapter.2}%
+\contentsline {chapter}{\chapternumberline {3}Echo State Network with Ordinal Partition based readout switching}{5}{chapter.3}%
+\contentsline {chapter}{\chapternumberline {4}Echo State Network with Ordinal Partition based Sub-Reservoirs}{7}{chapter.4}%
+\contentsline {chapter}{\chapternumberline {5}Echo State Network with Ordinal Partition based Sub-Reservoirs and Stochastic Sub-Reservoir Connections}{11}{chapter.5}%
+\contentsline {appendix}{\chapternumberline {A}Appendix Title}{13}{chapter.A}%
+\contentsline {chapter}{Bibliography}{15}{chapter*.14}%

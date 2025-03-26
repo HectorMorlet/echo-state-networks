@@ -9,6 +9,48 @@
 \usepackage{thmtools}
 \usepackage[linktocpage=true]{hyperref}
 
+
+\usepackage{tikz}
+\usetikzlibrary{calc,backgrounds}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{svg}
+\usepackage{pgfplots}
+\usepackage{xcolor}
+\usepackage{subcaption}
+
+\setcounter{MaxMatrixCols}{20} % Increase max allowed columns
+
+\usetikzlibrary{fadings}
+\tikzfading
+  [name=fadeLR,
+   left color=transparent!100,  % fully transparent at the left
+   right color=transparent!0]   % fully opaque at the right
+\tikzfading
+   [name=fadeRL,
+    right color=transparent!100,  % fully transparent at the left
+    left color=transparent!0]   % fully opaque at the right
+
+\definecolor{pale_yellow}{HTML}{ffef96}
+
+\definecolor{col1}{HTML}{7570B3}
+\definecolor{col2}{HTML}{D95F02}
+\definecolor{col3}{HTML}{1B9E77}
+\definecolor{col4}{HTML}{E7298A}
+\definecolor{col5}{HTML}{66A61E}
+\definecolor{col6}{HTML}{E6AB02}
+
+\definecolor{col1_light}{HTML}{8f8ac0}
+\definecolor{col2_light}{HTML}{d88a5f}
+\definecolor{col3_light}{HTML}{6fb89f}
+\definecolor{col4_light}{HTML}{e08fb5}
+\definecolor{col5_light}{HTML}{8fb87f}
+\definecolor{col6_light}{HTML}{e0c15a}
+
+
+
 \hypersetup{
     colorlinks,
     linkcolor={blue!90!black},
@@ -53,7 +95,8 @@
 \renewcommand{\leq}{\leqslant}
 \renewcommand{\geq}{\geqslant}
 
-\setlrmarginsandblock{4cm}{2cm}{*}
+% \setlrmarginsandblock{4cm}{2cm}{*}
+\setlrmarginsandblock{3cm}{3cm}{*}
 \setulmarginsandblock{3.5cm}{3cm}{*}
 \checkandfixthelayout
 
@@ -83,6 +126,10 @@
 
 \mainmatter
 \include{Chapters/Chapter_1}
+\include{Chapters/Chapter_2}
+\include{Chapters/Chapter_3}
+\include{Chapters/Chapter_4}
+\include{Chapters/Chapter_5}
 
 \begin{appendices}
 \include{Chapters/Appendix_A}
