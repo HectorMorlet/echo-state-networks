@@ -1,0 +1,40 @@
+\chapter{OPESN input raouting}
+\label{app:input_routing}
+
+\begin{figure}[h]
+    \centering
+
+    \begin{subfigure}[t]{\textwidth}
+        \caption{OPESN Input Routing - Ordinal Partition Driven vs. Random Selection, $m=2$}
+        \label{fig:OPESN_routing_direct_m_2}
+        \centering
+        \makebox[\textwidth][c]{%
+            \includegraphics[width=1.1\textwidth,trim=0 0 0 3mm,clip]{../Images/OPESN/OPESN_routing_direct_ordinal_vs_random_m=2.pdf}%
+        }
+    \end{subfigure}
+
+    \vspace{0em}
+
+    \begin{subfigure}[t]{\textwidth}
+        \caption{OPESN Input Routing - Ordinal Partition Driven vs. Random Selection, $m=3$}
+        \label{fig:OPESN_routing_direct_m_3}
+        \centering
+        \makebox[\textwidth][c]{%
+            \includegraphics[width=1.1\textwidth,trim=0 0 0 3mm,clip]{../Images/OPESN/OPESN_routing_direct_ordinal_vs_random_m=3.pdf}%
+        }
+    \end{subfigure}
+
+    \vspace{0em}
+
+    \begin{subfigure}[t]{\textwidth}
+        \caption{OPESN Input Routing - Ordinal Partition Driven vs. Random Selection, $m=4$}
+        \label{fig:OPESN_routing_direct_m_4}
+        \centering
+        \makebox[\textwidth][c]{%
+            \includegraphics[width=1.1\textwidth,trim=0 0 0 3mm,clip]{../Images/OPESN/OPESN_routing_direct_ordinal_vs_random_m=4.pdf}%
+        }
+    \end{subfigure}
+
+    \caption{Recursive prediction RMSE for the OPESN compared with a variant that chooses the readout randomly rather than dependent on the ordinal partition of the input, for delay $\tau=20$, noise level $\sigma=0.1$, and total reservoir size $k=468$. Subfigures (a), (b), and (c) correspond to $m=2$, $m=3$, and $m=4$, respectively.}
+    \label{fig:OPESN_routing_direct_ordinal_vs_random}
+\end{figure}

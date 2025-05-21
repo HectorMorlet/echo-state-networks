@@ -9,8 +9,8 @@ ro_variables = [0.2, 0.2, 5.7]
 
 # Time parameters
 init_time_to_ignore = 10
-total_time = 500*5
-time_delta = 0.01
+total_time = 500*10*5
+time_delta = 0.5
 
 # Define the Rössler system
 function Rossler(u, p, t)
@@ -42,6 +42,8 @@ end
 # Split x-coordinate data into training and testing sets
 ro_train, ro_test = SplitSet(ro_tr[:,1], 0.8)
 
+println(length(ro_train))
+
 # Save data to files
-writedlm(joinpath(@__DIR__, "..", "Data", "rossler_train_0_01.txt"), ro_train)
-writedlm(joinpath(@__DIR__, "..", "Data", "rossler_test_0_01.txt"), ro_test)
+writedlm(joinpath(@__DIR__, "..", "Data", "rossler_train_0_5.txt"), ro_train)
+writedlm(joinpath(@__DIR__, "..", "Data", "rossler_test_0_5.txt"), ro_test)

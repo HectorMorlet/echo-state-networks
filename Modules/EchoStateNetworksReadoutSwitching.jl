@@ -43,12 +43,13 @@ function run_ESN_readout_switching(x, ESN_params; S = nothing)
     return(states')
 end
 
-function train_one_step_pred_readout_switching(x, ESN_params, testing_params, partition_symbols, R_delay=1)
+function train_one_step_pred_readout_switching(x, ESN_params, testing_params, partition_symbols; R_delay=1)
     states = run_ESN_readout_switching(x, ESN_params)
     
-    target_z = x[1+R_delay:length(x)]
+    target_z = x[1+R_delay:end]
     @assert(size(states)[1]-R_delay == length(target_z))
     predicted_states = states[1:length(target_z),:]
+    partition_symbols = partition_symbols[1:length(target_z)]
 
     # if testing_params.mask_states_b4_readout
     #     if partition_symbols != nothing
@@ -64,8 +65,8 @@ function train_one_step_pred_readout_switching(x, ESN_params, testing_params, pa
 
     for i in 1:ESN_params.num_partitions
         R[i, :] = ridge_regression(
-            target_z[partition_symbols[1:end-1] .== i],
-            predicted_states[partition_symbols[1:end-1] .== i, :],
+            target_z[partition_symbols[1:end] .== i],
+            predicted_states[partition_symbols[1:end] .== i, :],
             ESN_params.β
         )
     end
@@ -76,18 +77,22 @@ end
 function one_step_pred_readout_switching(x, ESN_params, R, partition_symbols; S = nothing)
     states = run_ESN_readout_switching(x, ESN_params; S = S)
 
-    # if testing_params.mask_states_b4_readout
-    #     if partition_symbols != nothing
-    #         mask_states!(states, partition_symbols, ESN_params.k, ESN_params.num_partitions)
-    #     end
-    # end
-
     preds = states*R
 
     @assert(partition_symbols !== nothing)
-    @assert(count(x -> x === nothing, partition_symbols) == 0)
+    # @assert(count(x -> x === nothing, partition_symbols) == 0)
+    # TODO fix this
+    if count(x -> x === nothing, partition_symbols) != 0
+        first_non_idx = findfirst(sym -> sym !== nothing, partition_symbols)
+        if first_non_idx !== nothing
+            valid_symbols = filter(sym -> sym !== nothing, partition_symbols)
+            for idx in 1:(first_non_idx - 1)
+                partition_symbols[idx] = rand(valid_symbols)
+            end
+        end
+    end
 
-    partition_preds = [preds[i, partition_symbols[i]] for i in 1:length(partition_symbols)]
+    partition_preds = [preds[i, partition_symbols[i]] for i in 1:length(partition_symbols) if partition_symbols[i] !== nothing]
     
     return(partition_preds, states)
 end

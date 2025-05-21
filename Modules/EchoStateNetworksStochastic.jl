@@ -49,11 +49,11 @@ function randomly_choose_transition_partitions(num_partitions, ON_part_adjacency
     return(chosen_partitions)
 end
 
-function generate_possible_chosen_parts(num_partitions, ON_part_adjacency)
-    result = [findall(!iszero, row) for row in eachrow(ON_part_adjacency)]
+function generate_possible_chosen_parts(num_partitions, ON_part_adjacency; sensitivity=0.25)
+    result = [findall(p -> p > sensitivity, row) for row in eachrow(ON_part_adjacency)]
     possible_combinations = [collect(t) for t in Iterators.product(result...)]
-    
-    return(possible_combinations)
+    # println("Cacheable combinations: ", length(possible_combinations))
+    return possible_combinations
 end
 
 function mask_V_rec(V_rec, k, num_partitions, chosen_partitions)
@@ -72,7 +72,7 @@ function mask_V_rec(V_rec, k, num_partitions, chosen_partitions)
     return(masked_V_rec)
 end
 
-function run_ESN_stochastic(x, ESN_params; S = nothing, partition_symbols = nothing, ON_part_adjacency = nothing, rescale_V_rec = true)
+function run_ESN_stochastic(x, ESN_params; S = nothing, partition_symbols = nothing, ON_part_adjacency = nothing, rescale_V_rec = false)
     if S == nothing
         S = randn(ESN_params.k*ESN_params.num_partitions)
     end
@@ -93,7 +93,7 @@ function run_ESN_stochastic(x, ESN_params; S = nothing, partition_symbols = noth
             ESN_params.masked_V_recs[chosen_parts] = masked_V_rec
         end
     end
-    
+
     states = zeros(Float64, ESN_params.k*ESN_params.num_partitions, length(x))
     
     for t in 1:length(x)
@@ -107,11 +107,24 @@ function run_ESN_stochastic(x, ESN_params; S = nothing, partition_symbols = noth
             end
             masked_V_in = mask_V_in_for_partition(ESN_params.V_in, partition_symbols[t], ESN_params.k, ESN_params.num_partitions)
 
+            chosen_parts = randomly_choose_transition_partitions(ESN_params.num_partitions, ON_part_adjacency)
+            if !haskey(ESN_params.masked_V_recs, chosen_parts)
+                masked_V_rec = mask_V_rec(
+                    ESN_params.V_rec,
+                    ESN_params.k,
+                    ESN_params.num_partitions,
+                    chosen_parts
+                )
+                if rescale_V_rec
+                    max_abs_ev = maximum(abs.(eigen(masked_V_rec).values))
+                    masked_V_rec *= ESN_params.ρ / max_abs_ev
+                end
+            else
+                masked_V_rec = ESN_params.masked_V_recs[chosen_parts]
+            end
+
             # mask V_rec based on transition probabilities
             # masked_V_rec = randomly_mask_V_rec_for_partition(ESN_params.V_rec, partition_symbols[t], ESN_params.k, ESN_params.num_partitions, ON_part_adjacency)
-            
-            chosen_parts = randomly_choose_transition_partitions(ESN_params.num_partitions, ON_part_adjacency)
-            masked_V_rec = ESN_params.masked_V_recs[chosen_parts]
         else
             masked_V_in = ESN_params.V_in
             masked_V_rec = ESN_params.V_rec
@@ -125,8 +138,8 @@ function run_ESN_stochastic(x, ESN_params; S = nothing, partition_symbols = noth
     return(states')
 end
 
-function train_one_step_pred_stochastic(x, ESN_params; partition_symbols=nothing, ON_part_adjacency=nothing, rescale_V_rec=true, R_delay=1)
-    states = run_ESN_stochastic(x, ESN_params; partition_symbols=partition_symbols, ON_part_adjacency=ON_part_adjacency, rescale_V_rec=true)
+function train_one_step_pred_stochastic(x, ESN_params; partition_symbols=nothing, ON_part_adjacency=nothing, rescale_V_rec=false, R_delay=1)
+    states = run_ESN_stochastic(x, ESN_params; partition_symbols=partition_symbols, ON_part_adjacency=ON_part_adjacency, rescale_V_rec=rescale_V_rec)
     
     target_z = x[1+R_delay:length(x)]
     @assert(size(states)[1]-R_delay == length(target_z))
@@ -142,7 +155,7 @@ function train_one_step_pred_stochastic(x, ESN_params; partition_symbols=nothing
     return(R, states)
 end
 
-function one_step_pred_stochastic(x, ESN_params, R; S = nothing, partition_symbols=nothing, ON_part_adjacency=nothing, rescale_V_rec=true)
+function one_step_pred_stochastic(x, ESN_params, R; S = nothing, partition_symbols=nothing, ON_part_adjacency=nothing, rescale_V_rec=false)
     states = run_ESN_stochastic(x, ESN_params; S = S, partition_symbols=partition_symbols, ON_part_adjacency=ON_part_adjacency, rescale_V_rec=rescale_V_rec)
 
     # don't mask the states before readout

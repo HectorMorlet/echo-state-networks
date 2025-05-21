@@ -2,10 +2,11 @@ using DynamicalSystemsBase
 using DelimitedFiles
 
 init_conds = [-15.0,-15.0,10.0]
-lo_variables = [10, 8/3, 28]
+lo_variables = [10, 8/3, 28] # 
 init_time_to_ignore = 10
-total_time = 500*5
-time_delta = 0.05
+# total_time = 500
+total_time = 5000 # extra long
+time_delta = 0.01
 
 function Lorenz(u, p, t)
     σ = p[1]
@@ -32,6 +33,5 @@ end
 
 lo_train, lo_test = SplitSet(lo_tr[:,1], 0.8)
 
-writedlm("../Data/lorenz_train_0_05.txt", lo_train)
-writedlm("../Data/lorenz_test_0_05.txt", lo_test)
-
+writedlm(joinpath(@__DIR__, "..", "Data", "lorenz_train_0_01_extra_long.txt"), lo_train)
+writedlm(joinpath(@__DIR__, "..", "Data", "lorenz_test_0_01_extra_long.txt"), lo_test)

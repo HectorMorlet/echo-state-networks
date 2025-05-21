@@ -1,0 +1,18 @@
+Honours Dissertations should be between 40 and 75 typeset pages, including figures, tables, diagrams, but excluding appendices. A dissertation below this page range will typically contain too little material, while one above will typically be insufficiently concise and will be penalised because of this.
+Honours Dissertations should be prepared using LaTeX, with 12pt (computer modern) font, 1.5 or double line spacing, margins of at least 2.5 cm on all sides, and printed single-sided. Use the provided template.
+Appendices may include:
+references;
+bibliographies;
+data listings;
+details of data sources;
+instrumentation;
+program listings;
+additional figures and tables when the nature of subject requires many of these;
+details of long proofs outlined in the main text.
+Appendices other than references and bibliographies should be used only in a supportive role, and only where necessary and with restraint. Excessive or inappropriate use of appendices will be penalised.
+Any variation from these guidelines should be discussed with the Honours Co-ordinator, but keep in mind the intent of the guidelines that dissertations should be concise, rather than exhaustive.
+The introduction needs to include clear explanation of what is your own contribution vs what is literature review.
+
+The attached marking form is for the student to know how it will be accessed for the thesis.
+The student supervisor is the best person to provide feedback to the students. We expect students to talk to their supervisors. The supervisor knows the thesis better than anyone and should be able to provide specific details on what could be done to improve the thesis. It is probably the easiest and best way to get feedback.
+However, if a student wants feedback, then it must be requested. Unfortunately, this is a manual process, where the honours coordinator will have to organise and write each student's feedback based on the examiner's reports, which will take time to do.

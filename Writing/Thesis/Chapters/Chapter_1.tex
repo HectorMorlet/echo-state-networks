@@ -1,0 +1,75 @@
+% !TEX root = ../HonoursThesis.tex
+
+\renewcommand{\chapterlabel}{Chapter}
+\chapter{Introduction}
+\label{chap:introduction}
+
+The prediction of time series data is a challenge found across scientific and engineering disciplines, from forecasting weather patterns and financial markets to understanding physiological signals and controlling industrial processes. Many real-world systems exhibit chaotic dynamics, making their future behaviour inherently difficult to predict. The limitations of traditional time series models in predicting chaotic dynamics has spurred the development of more adaptive and computationally efficient approaches.
+
+\section{Reservoir computing and echo state networks}
+\label{sec:rc_and_esn}
+
+Reservoir computing (RC) models for processing sequential data offer an attractive balance between performance and computational cost. As reviewed in Chapter~\ref{chap:ESNs}, echo state networks (ESNs) have a large, fixed, and randomly generated recurrent neural network (RNN) known as the ``reservoir.'' Fitting the parameters of the ESN is efficient because only the final parameters mapping the reservoir to the output (the ``readout'') are trained, typically through simple linear regression.
+By training only the readout layer, ESNs do not require the computationally expensive and often unstable process of fitting every weight in a traditional RNN, avoiding issues such as vanishing or exploding gradients~\cite{jaeger_2001}.
+
+The dynamics of an ESN's reservoir are designed to possess the ``echo state property,'' which ensures that the reservoir's current state is a unique function of the input history, with the influence of past inputs gradually fading over time. This property allows the reservoir to act as a non-linear feature extractor, transforming the input time series into a high-dimensional state space where the underlying temporal patterns can be more easily discerned and predicted by the linear readout. ESNs have demonstrated considerable success in various time series prediction tasks~\cite{lukosevicius_and_jaeger_2009}, yet there remains scope for enhancing their ability to model particularly complex dynamics and to effectively incorporate data-derived features.
+
+\section{The potential of modularity and feature integration}
+\label{sec:modularity_feature_integration}
+
+To improve the predictions of ESNs, researchers have explored modular ESN architectures. As reviewed in Chapter~\ref{chap:ESNs}, these approaches often involve dividing the reservoir into multiple sub-reservoirs or introducing novel readout mechanisms. The motivation behind modularity is to allow different components of the network to specialise in capturing different aspects or scales of the input dynamics, potentially leading to improved overall performance. Other strategies involve context-sensitive input routing to different sub-reservoirs or switching between multiple readout functions based on the input or reservoir state.
+
+Alongside architectural innovations, the integration of informative features derived from the time series itself presents another avenue for enhancing ESN performance. If features can effectively summarise recent dynamics, their incorporation into the ESN architecture could improve its predictive capability.
+
+\section{Ordinal partition analysis: a novel feature for ESNs}
+\label{sec:ordinal_partition_analysis}
+
+This thesis focuses on incorporating ordinal partition analysis, a technique introduced by Bandt and Pompe (2002), as a novel feature selected for ESNs. Ordinal partition analysis, detailed in Chapter 3, transforms a time series into a sequence of discrete symbols based on the relative order of values within sliding windows of the series. Each symbol, or ``ordinal pattern,'' represents the local rank ordering of data points, capturing the underlying temporal structure without relying on the absolute magnitudes of the values.
+
+This method offers several advantages: it is robust to noise, invariant to monotonic transformations (making it less sensitive to scaling and offsets), and computationally efficient. Ordinal patterns and their derived statistics, such as permutation entropy, have been applied in tasks like analysis of physiological signals (e.g., EEG~\cite{keller_2007}) and change-point detection in financial time series~\cite{zanin_2013}. The simplicity of ordinal patterns makes them an attractive candidate for enhancing the predictions of ESNs. Moreover the way ordinal patterns inherently partition the input space makes them particularly suitable for models employing gating or input routing mechanisms.
+% (Staniek and Lehnertz, 2008; Olofsen et al., 2008)
+% (Zunino et al., 2012)
+% (Rosso et al., 2007)
+
+\section{Problem statement and motivation}
+\label{sec:problem_statement_motivation}
+
+Despite the demonstrated utility of both ESNs and ordinal partitions for predictive tasks on chaotic data, the integration of ordinal partition information directly into the architectural design of ESNs for time series prediction remains unexplored. Standard ESNs process input signals without explicit guidance from such data-derived features.
+
+This thesis investigates the hypothesis that by incorporating ordinal partition information into ESNs—either to guide the selection of a readout mechanism or to structure the reservoir and route input signals—we can develop ESN models that better represent the dynamics of chaotic time series to improve prediction accuracy and stability. The motivation is to create ESN architectures that not only perform well on prediction tasks but also leverage an interpretable, data-derived feature to potentially offer insights into the system's dynamics.
+
+\section{Aims and contributions}
+\label{sec:aims_contributions}
+
+The primary aims of this research are:
+
+\begin{enumerate}
+    \item \textbf{To design and implement novel ESN architectures} that use ordinal partition information derived from the input time series. This involves:
+    \begin{itemize}
+        \item Developing an \textbf{Ordinal partition-based Readout Switching ESN (ORSESN)}, where different readout vectors are activated based on the ordinal symbols of the input.
+        \item Developing an \textbf{Ordinal Partition Echo State Network (OPESN)}, which employs ordinal partitions to route input to distinct sub-reservoirs and potentially to structure the connections between these sub-reservoirs.
+    \end{itemize}
+    \item \textbf{To rigorously evaluate the performance} of these proposed architectures against traditional ESNs for relevant prediction tasks. This evaluation will be conducted on synthetic data generated from well-known chaotic attractors (Lorenz, Rössler, and Mackey-Glass), which exhibit the nonlinear dynamics these models aim to predict.
+    \item \textbf{To investigate the impact of key design parameters} on the performance of the proposed models. This includes examining the influence of ordinal partition parameters (embedding dimension $m$, delay $\tau$) and specific architectural choices within the ORSESN and OPESN.
+\end{enumerate}
+
+The main contributions of this thesis are the development and empirical validation of these novel ESN architectures. By demonstrating the potential benefits of integrating ordinal partitions, this work aims to broaden the set of tools available for time series prediction with reservoir computers.
+
+\section{Thesis outline}
+\label{sec:thesis_outline}
+
+The remainder of this thesis is structured as follows:
+
+\begin{itemize}
+    \item \textbf{Chapter 2: Modular Echo State Networks} provides a review of the foundational concepts of reservoir computing, the properties of ESNs, and surveys existing approaches to modularity in ESNs, including hierarchical and parallel sub-reservoirs, input routing strategies, and readout switching mechanisms.
+    \item \textbf{Chapter 3: Ordinal Partitions} details the methodology of ordinal partition analysis. It covers the generation of ordinal patterns, the selection of embedding parameters ($m$ and $\tau$), derived concepts such as permutation entropy and forbidden patterns, and discusses various applications of ordinal analysis for prediction tasks.
+    \item \textbf{Chapter 4: Testing Methods} describes the experimental framework used to evaluate the proposed ESN architectures. This includes a description of the generation of training and testing data (Lorenz, Rössler, Mackey-Glass) with varying noise levels, the types of multi-step prediction tasks (iterative and direct), the testing procedure, and the primary evaluation metric (Root Mean Squared Error, RMSE).
+    \item \textbf{Chapter 5: Echo State Network with Ordinal Partition Based Readout Switching} introduces the first proposed architecture, the ORSESN. It details its implementation, including how ordinal partitions of the input are used to select among multiple readout vectors. The chapter then presents and analyses the experimental results, comparing the ORSESN's performance to traditional ESNs across different datasets, prediction horizons, and parameter settings.
+    \item \textbf{Chapter 6: Echo State Network with Ordinal Partition Based Sub-Reservoirs} introduces the second proposed architecture, the OPESN. This model uses ordinal partitions to route input to specific sub-reservoirs and explores different strategies for connecting these sub-reservoirs based on ordinal transition probabilities. The implementation details and experimental results are presented and discussed.
+    \item \textbf{Chapter 7: Conclusion} summarises the key findings of the research, discusses the implications of the results for time series prediction using ESNs, acknowledges the limitations of the current study, and proposes potential directions for future work in this area.
+\end{itemize}
+
+
+
+
+

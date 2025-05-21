@@ -1,0 +1,10 @@
+
+Approximate equivalences:
+
+Lorenz: 0.01
+Rossler: 0.1
+MG: 0.5
+
+Lorenz: 0.05
+Rossler: 0.5
+MG: 2.5

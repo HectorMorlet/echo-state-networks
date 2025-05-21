@@ -1,0 +1,56 @@
+This is BibTeX, Version 0.99d (TeX Live 2025)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: HonoursThesis.aux
+A level-1 auxiliary file: Chapters/Abstract.aux
+A level-1 auxiliary file: Chapters/Acknowledgements.aux
+A level-1 auxiliary file: Chapters/Chapter_1.aux
+A level-1 auxiliary file: Chapters/Chapter_2.aux
+A level-1 auxiliary file: Chapters/Chapter_3.aux
+A level-1 auxiliary file: Chapters/Chapter_4.aux
+A level-1 auxiliary file: Chapters/Chapter_5.aux
+A level-1 auxiliary file: Chapters/Chapter_6.aux
+A level-1 auxiliary file: Chapters/Chapter_7.aux
+A level-1 auxiliary file: Chapters/Appendix_A.aux
+The style file: abbrv.bst
+Database file #1: Bibliography/bibliography.bib
+You've used 49 entries,
+            2118 wiz_defined-function locations,
+            823 strings with 12814 characters,
+and the built_in function-call counts, 18173 in all, are:
+= -- 1824
+> -- 869
+< -- 15
++ -- 338
+- -- 284
+* -- 1333
+:= -- 2999
+add.period$ -- 157
+call.type$ -- 49
+change.case$ -- 274
+chr.to.int$ -- 0
+cite$ -- 49
+duplicate$ -- 668
+empty$ -- 1367
+format.name$ -- 284
+if$ -- 3810
+int.to.chr$ -- 0
+int.to.str$ -- 49
+missing$ -- 51
+newline$ -- 251
+num.names$ -- 108
+pop$ -- 237
+preamble$ -- 1
+purify$ -- 229
+quote$ -- 0
+skip$ -- 497
+stack$ -- 0
+substring$ -- 1268
+swap$ -- 158
+text.length$ -- 15
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 188
+warning$ -- 0
+while$ -- 184
+width$ -- 51
+write$ -- 566

@@ -1,0 +1,10 @@
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+An echo state network (ESN) is a recurrent neural network whose fixed internal network make it inexpensive to train, and effective for nonlinear time series forecasting. Ordinal partition analysis is a symbolic technique for characterising time series data that encodes the rank order of successive observations, yielding a scale invariant representation of time series that is robust to noise. This thesis explores whether ordinal partitions can be used explicitly as features within ESN architectures to extend their forecast horizon and stability. Two models are developed: (1) The Ordinal partition Readout Switching ESN (ORSESN) keeps a single reservoir but fits a separate readout vector for each observed ordinal pattern. (2) The Ordinal Partition ESN (OPESN) partitions the reservoir itself into sub-reservoirs associated with individual ordinal patterns and routes the input accordingly.
+
+The proposed models are evaluated against a standard ESN on the Lorenz, R\"{o}ssler, and Mackey-Glass systems, using both iterative and direct multi-step prediction tasks with additive Gaussian noise. The ORSESN consistently achieves lower root mean squared error (RMSE) than the baseline for prediction horizons greater than approximately five steps.
+These improvements are robust to noise, remaining effective even when the noise's standard deviation is as large as that of the signal.
+The OPESN provides more modest improvements and demonstrates notable predictive performance on the Mackey-Glass time series.
+
+The results indicate that integrating ordinal partitions through readout switching can extend the practical forecast horizon of ESNs without increasing training cost, whereas structural partitioning of the reservoir offers limited benefit. Ordinal features therefore represent a viable route to stronger reservoir computing models for chaotic time series prediction.

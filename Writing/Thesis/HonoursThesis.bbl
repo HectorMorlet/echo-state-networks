@@ -1,0 +1,251 @@
+\begin{thebibliography}{10}
+
+\bibitem{amigo_2007}
+J.~M. Amigó, S.~Zambrano, and M.~A.~F. Sanjuán.
+\newblock True and false forbidden patterns in deterministic and random dynamics.
+\newblock {\em Europhysics Letters}, 79(5):50001, jul 2007.
+
+\bibitem{argentieri_2022}
+L.~Argentieri, C.~Gallicchio, A.~Micheli, et~al.
+\newblock Input routed echo state networks.
+\newblock In {\em ESANN 2022 Proceedings - 30th European Symposium on Artificial Neural Networks, Computational Intelligence and Machine Learning}, pages 405--410, 2022.
+
+\bibitem{babinec_pospichal_2009}
+{\v{S}}.~Babinec and J.~Posp{\'i}chal.
+\newblock Gating echo state neural networks for time series forecasting.
+\newblock In M.~K{\"o}ppen, N.~Kasabov, and G.~Coghill, editors, {\em Advances in Neuro-Information Processing}, pages 200--207, Berlin, Heidelberg, 2009. Springer Berlin Heidelberg.
+
+\bibitem{bandt_pompe_2002}
+C.~Bandt and B.~Pompe.
+\newblock Permutation entropy: A natural complexity measure for time series.
+\newblock {\em Phys. Rev. Lett.}, 88:174102, Apr 2002.
+
+\bibitem{boaretto_2021}
+B.~Boaretto and C.~Masoller.
+\newblock Discriminating chaotic and stochastic time series using permutation entropy and artificial neural networks.
+\newblock {\em Scientific reports}, 11(1):15789, 2021.
+
+\bibitem{buehner_young_2006}
+M.~Buehner and P.~Young.
+\newblock A tighter bound for the echo state property.
+\newblock {\em IEEE Transactions on Neural Networks}, 17(3):820--824, 2006.
+
+\bibitem{carmichael_2018}
+Z.~Carmichael, H.~Syed, S.~Burtner, and D.~Kudithipudi.
+\newblock Mod-deepesn: modular deep echo state network.
+\newblock {\em CoRR}, abs/1808.00523, 2018.
+
+\bibitem{dale_2018}
+M.~Dale.
+\newblock Neuroevolution of hierarchical reservoir computers.
+\newblock In {\em Proceedings of the Genetic and Evolutionary Computation Conference}, GECCO '18, pages 410--417, New York, NY, USA, 2018. Association for Computing Machinery.
+
+\bibitem{dale_2016}
+M.~Dale, J.~F. Miller, and S.~Stepney.
+\newblock {\em Reservoir computing as a model for in-materio computing}, pages 533--571.
+\newblock Springer International Publishing, Cham, 2017.
+
+\bibitem{deng_and_zhang_2007}
+Z.~Deng and Y.~Zhang.
+\newblock Collective behavior of a small-world recurrent neural system with scale-free distribution.
+\newblock {\em IEEE Transactions on Neural Networks}, 18(5):1364--1375, 2007.
+
+\bibitem{fernando_and_sojakka_2003}
+C.~Fernando and S.~Sojakka.
+\newblock Pattern recognition in a bucket.
+\newblock In W.~Banzhaf, J.~Ziegler, T.~Christaller, P.~Dittrich, and J.~T. Kim, editors, {\em Advances in Artificial Life}, pages 588--597, Berlin, Heidelberg, 2003. Springer Berlin Heidelberg.
+
+\bibitem{gallicchio_and_micheli_2017}
+C.~Gallicchio, A.~Micheli, and L.~Pedrelli.
+\newblock Deep reservoir computing: A critical experimental analysis.
+\newblock {\em Neurocomputing}, 268:87--99, 2017.
+\newblock Advances in artificial neural networks, machine learning and computational intelligence.
+
+\bibitem{hochreiter_1997}
+S.~Hochreiter and J.~Schmidhuber.
+\newblock Long short-term memory.
+\newblock {\em Neural Computation}, 9(8):1735--1780, 1997.
+
+\bibitem{jacobs_1991}
+R.~A. Jacobs, M.~I. Jordan, S.~J. Nowlan, and G.~E. Hinton.
+\newblock Adaptive mixtures of local experts.
+\newblock {\em Neural Computation}, 3(1):79--87, 1991.
+
+\bibitem{jaeger_2001}
+H.~Jaeger.
+\newblock The ``echo state'' approach to analysing and training recurrent neural networks.
+\newblock GMD Report 148, German National Research Center for Information Technology, Sankt Augustin, Germany, 2001.
+\newblock With an erratum note.
+
+\bibitem{jaeger_2007}
+H.~Jaeger.
+\newblock Discovering multiscale dynamical features with hierarchical echo state networks.
+\newblock Technical Report~10, Jacobs University Bremen, 2007.
+
+\bibitem{jarvis_2010}
+S.~Jarvis, S.~Rotter, and U.~Egert.
+\newblock Extending stability through hierarchical clusters in echo state networks.
+\newblock {\em Frontiers in Neuroinformatics}, Volume 4 - 2010, 2010.
+
+\bibitem{jordan_1994}
+M.~I. Jordan and R.~A. Jacobs.
+\newblock Hierarchical mixtures of experts and the em algorithm.
+\newblock {\em Neural Computation}, 6(2):181--214, 1994.
+
+\bibitem{kantz_2003}
+H.~Kantz and T.~Schreiber.
+\newblock {\em Nonlinear time series analysis}.
+\newblock Cambridge University Press, USA, 2003.
+
+\bibitem{keller_2007}
+K.~Keller, H.~Lauffer, and M.~Sinn.
+\newblock {\em Ordinal analysis of EEG time series}, pages 239--249.
+\newblock Nova Science Publishers, Inc., Dec. 2009.
+
+\bibitem{laan_vicente_2015}
+A.~Laan and R.~Vicente.
+\newblock Echo state networks with multiple readout modules.
+\newblock {\em bioRxiv}, 2017.
+
+\bibitem{leyva_2022}
+I.~Leyva, J.~H. Martínez, C.~Masoller, O.~A. Rosso, and M.~Zanin.
+\newblock 20 years of ordinal patterns: perspectives and challenges.
+\newblock {\em Europhysics Letters}, 138(3):31001, may 2022.
+
+\bibitem{li_2022}
+Y.~Li and F.~Li.
+\newblock Growing deep echo state network with supervised learning for time series prediction.
+\newblock {\em Applied Soft Computing}, 128:109454, 2022.
+
+\bibitem{li_tanaka_2021}
+Z.~Li and G.~Tanaka.
+\newblock Multi-reservoir echo state networks with sequence resampling for nonlinear time-series prediction.
+\newblock {\em Neurocomputing}, 467:115--129, 2022.
+
+\bibitem{liu_2020}
+Y.~Liu, Y.~Lin, Z.~Jia, Y.~Ma, and J.~Wang.
+\newblock Representation based on ordinal patterns for seizure detection in eeg signals.
+\newblock {\em Computers in Biology and Medicine}, 126:104033, 2020.
+
+\bibitem{long_2020}
+J.~Long, S.~Zhang, and C.~Li.
+\newblock Evolving deep echo state networks for intelligent fault diagnosis.
+\newblock {\em IEEE Transactions on Industrial Informatics}, 16(7):4928--4937, 2020.
+
+\bibitem{lorenz}
+E.~N. Lorenz.
+\newblock Deterministic nonperiodic flow.
+\newblock {\em Journal of Atmospheric Sciences}, 20(2):130 -- 141, 1963.
+
+\bibitem{lukosevicius_2012_practical_guide}
+M.~Luko{\v{s}}evi{\v{c}}ius.
+\newblock {\em A practical guide to applying echo state networks}, pages 659--686.
+\newblock Springer Berlin Heidelberg, Berlin, Heidelberg, 2012.
+
+\bibitem{lukosevicius_and_jaeger_2009}
+M.~Lukoševičius and H.~Jaeger.
+\newblock Reservoir computing approaches to recurrent neural network training.
+\newblock {\em Computer Science Review}, 3(3):127--149, 2009.
+
+\bibitem{lun_2023}
+S.~Lun, Z.~Sun, M.~Li, and L.~Wang.
+\newblock Multiple-reservoir hierarchical echo state network.
+\newblock {\em Mathematics}, 11(18), 2023.
+
+\bibitem{ma_2017}
+Q.~Ma, L.~Shen, and G.~W. Cottrell.
+\newblock Deep-esn: {a} multiple projection-encoding hierarchical reservoir computing framework.
+\newblock {\em CoRR}, abs/1711.05255, 2017.
+
+\bibitem{ma_2021}
+Q.~Ma, L.~Shen, and G.~W. Cottrell.
+\newblock Deepr-esn: A deep projection-encoding echo-state network.
+\newblock {\em Information Sciences}, 511:152--171, 2020.
+
+\bibitem{ma_chen_2013}
+Q.-L. Ma and W.-B. Chen.
+\newblock Modular state space of echo state network.
+\newblock {\em Neurocomputing}, 122:406--417, 2013.
+\newblock Advances in cognitive and ubiquitous computing.
+
+\bibitem{mackey_glass}
+M.~C. Mackey and L.~Glass.
+\newblock Oscillation and chaos in physiological control systems.
+\newblock {\em Science}, 197(4300):287--289, 1977.
+
+\bibitem{malik_2017}
+Z.~K. Malik, A.~Hussain, and Q.~J. Wu.
+\newblock Multilayered echo state machine: A novel architecture and algorithm.
+\newblock {\em IEEE Transactions on Cybernetics}, 47(4):946--959, 2017.
+
+\bibitem{masoudnia_2014}
+S.~Masoudnia and R.~Ebrahimpour.
+\newblock Mixture of experts: a literature survey.
+\newblock {\em Artificial Intelligence Review}, 42:275--293, 2014.
+
+\bibitem{qiao_2016}
+J.~Qiao, F.~Li, H.~Han, and W.~Li.
+\newblock Growing echo-state network with multiple subreservoirs.
+\newblock {\em IEEE Transactions on Neural Networks and Learning Systems}, 28(2):391--404, 2017.
+
+\bibitem{riedl_2013}
+M.~Riedl, A.~M{\"u}ller, and N.~Wessel.
+\newblock Practical considerations of permutation entropy: A tutorial review.
+\newblock {\em The European Physical Journal Special Topics}, 222(2):249--262, 2013.
+
+\bibitem{rossler}
+O.~Rössler.
+\newblock An equation for continuous chaos.
+\newblock {\em Physics Letters A}, 57(5):397--398, 1976.
+
+\bibitem{shazeer_2017}
+N.~Shazeer, A.~Mirhoseini, K.~Maziarz, A.~Davis, Q.~V. Le, G.~E. Hinton, and J.~Dean.
+\newblock Outrageously large neural networks: The sparsely-gated mixture-of-experts layer.
+\newblock {\em CoRR}, abs/1701.06538, 2017.
+
+\bibitem{sinn_2012}
+M.~Sinn, A.~Ghodsi, and K.~Keller.
+\newblock Detecting change-points in time series by maximum mean discrepancy of ordinal pattern distributions.
+\newblock In {\em Proceedings of the Twenty-Eighth Conference on Uncertainty in Artificial Intelligence}, UAI'12, pages 786--794, Arlington, Virginia, USA, 2012. AUAI Press.
+
+\bibitem{sun_2022}
+X.~Sun, M.~Hao, Y.~Wang, Y.~Wang, Z.~Li, and Y.~Li.
+\newblock Reservoir dynamic interpretability for time series prediction: A permutation entropy view.
+\newblock {\em Entropy}, 24(12), 2022.
+
+\bibitem{tabuse_kinouchi_and_hagiwara_1997}
+M.~Tabuse, M.~Kinouchi, and M.~Hagiwara.
+\newblock Recurrent neural network using mixture of experts for time series processing.
+\newblock In {\em 1997 IEEE International Conference on Systems, Man, and Cybernetics. Computational Cybernetics and Simulation}, volume~1, pages 536--541 vol.1, 1997.
+
+\bibitem{thorne_2022}
+B.~Thorne, T.~J{\"u}ngling, M.~Small, D.~Corr{\^e}a, and A.~Zaitouny.
+\newblock A novel approach to time series complexity via reservoir computing.
+\newblock In H.~Aziz, D.~Corr{\^e}a, and T.~French, editors, {\em AI 2022: Advances in Artificial Intelligence}, pages 442--455, Cham, 2022. Springer International Publishing.
+
+\bibitem{wcislo_2021}
+R.~Wcis{\l}o and W.~Czech.
+\newblock Grouped multi-layer echo state networks with self-normalizing activations.
+\newblock In M.~Paszynski, D.~Kranzlm{\"u}ller, V.~V. Krzhizhanovskaya, J.~J. Dongarra, and P.~M.~A. Sloot, editors, {\em Computational Science -- ICCS 2021}, pages 90--97, Cham, 2021. Springer International Publishing.
+
+\bibitem{wringe_2024}
+C.~Wringe, S.~Stepney, and M.~A. Trefzer.
+\newblock Restricted reservoirs on heterogeneous timescales.
+\newblock In M.~Wand, K.~Malinovsk{\'a}, J.~Schmidhuber, and I.~V. Tetko, editors, {\em Artificial Neural Networks and Machine Learning -- ICANN 2024}, pages 168--183, Cham, 2024. Springer Nature Switzerland.
+
+\bibitem{yuksel_2012}
+S.~E. Yuksel, J.~N. Wilson, and P.~D. Gader.
+\newblock Twenty years of mixture of experts.
+\newblock {\em IEEE Transactions on Neural Networks and Learning Systems}, 23(8):1177--1193, 2012.
+
+\bibitem{zanin_2013}
+M.~Zanin.
+\newblock Forbidden patterns in financial time series.
+\newblock {\em Chaos: An Interdisciplinary Journal of Nonlinear Science}, 18(1):013119, 03 2008.
+
+\bibitem{zanin_2023}
+M.~Zanin.
+\newblock Continuous ordinal patterns: creating a bridge between ordinal analysis and deep learning.
+\newblock {\em Chaos: An Interdisciplinary Journal of Nonlinear Science}, 33(3):033114, 03 2023.
+
+\end{thebibliography}

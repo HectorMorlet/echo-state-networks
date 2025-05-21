@@ -1,0 +1,12 @@
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\contentsline {table}{\numberline {3.1}{\ignorespaces Example: Ordinal patterns and their allocated ordinal symbols for $m=3$.}}{22}{table.caption.18}%
+\contentsline {table}{\numberline {3.2}{\ignorespaces Ordinal transition probabilities for the example time series in Figure \ref {fig:ordinal_partitioned_example_time_series}. Each entry $p(\pi _j | \pi _i)$ gives the probability of transitioning from ordinal partition $\pi _i$ at time $t$ to $\pi _j$ at time $t+1$.}}{23}{table.caption.20}%
+\addvspace {10pt}
+\contentsline {table}{\numberline {4.1}{\ignorespaces Optimal partition delay values $\tau $ selected for ORSESN and OPESN models across different datasets and prediction types. Values are shown for each tested $m$ (ordinal pattern dimension), and were optimise to minimise RMSE.}}{34}{table.caption.35}%
+\addvspace {10pt}
+\addvspace {10pt}
+\contentsline {table}{\numberline {6.1}{\ignorespaces Example transition probabilities used to form our restricted recurrence matrix $W_{rec}$.}}{57}{table.caption.61}%
+\addvspace {10pt}
+\addvspace {10pt}

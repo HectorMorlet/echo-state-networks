@@ -1,0 +1,305 @@
+- Introduction
+- Background: Ordinal partitions
+    - Explanation of ordinal partitions
+        - Bandt and Pompe
+            - Encodes segments of a time series into symbols that represent the order relations among data points.
+            - Parameters
+                - Embedding dimension
+                - Embedding delay
+            - For each sliding window of m points in the series, values are ranked from smallest to largest.
+            - The relative ranking of indices forms the ordinal pattern
+            - Give example
+            - By applying this across the whole time series, one can generate a sequence of ordinal patterns.
+            - We can then derive a frequency distribution of ordinal patterns from this sequence.
+            - The frequency distribution (also called 'ordinal probabilities') can then be used to compute information-theoretic measures
+                - Permutation entropy (the shannon entropy of the ordinal distribution)
+                    - Quantifies complexity
+                        - Low values: more regular (predictable or periodic)
+                        - High values: more complex (stochastic-like dynamics)
+            Leyva et al. (2022) '20 Years of Ordinal Patterns: Perspectives and Challenges'
+            - If certain ordinal patterns never occur in a given system, they are termed "forbidden patterns"
+                - indicates that dynamics may be deterministic rather than pure noise.
+    - Feature selection of ordinal partitions
+        - Liu et al. (2020)
+            - Proposed ordinal pattern representation for EEG time series to detect epileptic seizures
+            - Ordinally partitioned EEG time series and derived the:
+                - Distribution of ordinal patterns
+                - Distribution of ordinal pattern adjacency pairs
+            - Used these features as input into a k-Nearest Neighbour classifier
+                - achieved over 90% accuracy, sensitivity, and specificity on benchmark seizure datasets
+                - outperformed several state-of-the-art methods.
+            - Shows that ordinal partitions are a useful discriminatory feature
+        - Boaretto et al. "Discriminating chaotic and stochastic time series using permutation entropy and artificial neural networks"
+            - Used ordinal transition probabilities as input into ANN for categorising chaotic and stochastic time series
+    - Ordinal analysis for change point detection
+        - Sinn et al. (2013)
+            - Ordinal analysis => change point detection
+                - Demonstrated that ordinal pattern distribution of a time series reflect its underlying dynamics.
+                - Changes in dynamics cause shifts in the distribution.
+            - Two algorithms to detect dynamic regime changes
+                - A kernel-based distance between ordinal distributions (Maximum Mean Discrepancy)
+                - Clustering ordinal distributions
+        - This methodology has been applied to real-world data
+            - Zanin, M. (2013). "Forbidden patterns in financial time series"
+            - Sinn, M., Ghodsi, A., & Keller, K. (2012). "Detecting Change-Points in Time Series by Maximum Mean Discrepancy of Ordinal Pattern Distributions"
+                - ECG & EEG recordings
+    - Other less relevant stuff
+        - Ordinal partitions for analysis of reservoirs
+            - Thorne et al. (2022)
+                - compared ordinal permutation entropy to estimates of complexity derived from Echo State Networks. The research showed clear connection between the complexity characteristics of a signal and the structure of the reservoir computer when driven with that signal, and suggested that the permutation entropy could be used to make structural choices about the ESN, such as connectiveness or spectral radius.
+            - Sun et al. (2022) "Reservoir Dynamic Interpretability for Time Series Prediction: A Permutation Entropy View"
+                - Applied Bandt & Pompe's method to the states of reservoir neurons over time, yielding:
+                    - "Instantaneous State Entropy (ISE)", the entropy of the full reservoir state at each time step
+                        - High ISE -> a reservoir state is high entropy
+                    - "Global State Entropy (GSE)", the entropy of the distribution of individual-neuron entropy values
+                        - High GSE -> large variation in behaviour across reservoir neurons
+                - Found that certain reservoir entropy levels correlated with better projection capability and forecasting accuracy.
+        - Zanin (2023) - Continuous Ordinal Patterns
+            - Generalisation of ordinal analysis
+            - Ordinal patterns are defined continuously
+            - Optimised for specific problem
+    - Leyva et al. (2022) - 20 Years of Ordinal Patterns: Perspectives and Challenges
+        - Outlines 'promising research directions'
+        - "More research is needed to better understand the statistical properties of the ordi- nal patterns, and in particular, the values of the ordinal probabilities. If the exis- tence of ordinal patterns with similar probabilities turns out to be a generic prop- erty of certain dynamical systems, this should be taken into account when com- bining ordinal analysis with machine learning, as a proper selection of the input features (ordinal probabilities) will avoid feeding the machine learning algorithm with redundant features."
+    - Interpretability
+        - Ordinal features are inherently interpretable
+        - Patterns might be forbidden or over-represented
+        - This justifies the model’s decisions in terms of known dynamical properties
+- Background: Echo State networks
+    - Explanation of Echo State Networks
+        - Jaeger (2001)
+        - Harnessing Nonlinearity: Predicting Chaotic Systems and Saving Energy in Wireless Communication - Herbert Jaeger* and Harald Haas (2004)
+        - Introductory description
+            - Type of RC where an input signal is mapped to network states
+            - Explain definition of reservoir computer
+                - Two parts
+                    - State evolution
+                    - Readout
+            - Type of Recurrent Neural Network
+                - Designed for sequence to sequence prediction
+                    - M. Lukoševičius and H. Jaeger. Reservoir computing approaches to recurrent neural network training. Comput. Sci. Rev., 3(3):127–149, 2009.
+                - State update equation
+                - For ESNs: Parameters are fixed and only a readout vector is fitted
+                - Discuss ESNs as solution to vanishing gradients problem as per Lukoševičius and Jaeger
+                - Discuss computational efficiency
+            - Echo State Networks
+                - Diagram
+                - State update equation
+                - W_rec erdos renyi graph
+                - W_bias and b_in random
+                - activation function
+            - The Echo State Property
+                - Given long enough input sequence, states will become independent
+                - Cite original Jaeger paper
+                - Give three key conditions of echo state property (see essay)
+            - Fitting the readout vector
+                - Inference equation
+                - Discuss regularisation
+                - Regression equation
+            - Memory Capacity
+            - Hyperparameters k, d, rho
+                - reservoir size k
+                - Average degree d
+                - Spectral radius rho
+    - Review of 'Mixture-of-Experts' and Dynamic Routing methods generally
+        - Original introduced by Jacobs et al. (1991)
+            - Introduced the 'Adaptive Mixture of Local Experts'
+                - Training:
+                    - Several neural network 'expert' modules
+                    - A 'gating network' (softmaxed) to weight their outputs
+                - The final output is a weighted combination of the experts' outputs.
+                - Both the experts and the gating function are trained concurrently on the supervised task, so that the system automatically partitions the problem among experts
+                - Achieved better generalisation than a monolithic network
+            - Tree structure
+            - Three main components:
+                - Multiple expert models (regression functions or classifiers)
+                - A gate that makes soft partitions of input Space
+                    - Defines regions for each individual expert
+                - A probabilistic model to combine the experts and the gate.
+            - Introduces three important properties (According to M. I. Jordan (1994))
+                - Allows individual experts to specialise on smaller parts of the larger problem
+                - Uses soft partitions of the data
+                - Allows splits of the input space to be formed along hyperplanes at arbitrary orientations
+            - Allows for representation of nonstationary data
+            - MoE has been revisited and revived over the years in many publications.
+        - Jordan and Jacobs (1994)
+            - Formalised the 'Hierarchical Mixtures of Experts'
+            - Provided the Expectation-Maximisation algorithm for training it.
+            - The HME model allows gating to be organised in a tree like hierarchy of multiple levels of experts.
+        - Give diagram of MoE model
+        - Mixture of Expert models can be viewed as a generalisation of piecewise models and gating methods known beforehand. Models in which the gating function is rule-based are special cases of MoE where the gating function is defined by some known criterion, rather than being trained or fitted alongside the experts.
+        - Time series
+            - Mixture of experts models have been used widely for predicting time series [citation need]
+        - Recurrent Neural Networks
+            - Tabuse, Kinouchi, Hagiwara (1997) 'Recurrent Neural Network using Mixture of Experts for Time Series Processing.'
+                - Proposed a mixture of recurrent neural networks for time series processing.
+                - Trained using the EM algorithm
+                - Reported that it achieved faster training and better performance on benchmark sequences compared to a single RNN.
+            - Shazeer et al. (2017) "Outrageously Large Neural Networks"
+                - Caused a major resurgence of Mixture of Recurrent Neural Network Experts
+                - Used MoE within a stacked LSTM (type of RNN) network for machine translation
+        - Echo State Networks
+            - Babinec and Pospíchal (2008)
+                - Modular ESN
+                    - several unconnected ESN reservoirs used in parallel as expert models
+                    - Each reservoir has a different memory Capacity
+                        - Achieved by varying spectral radii or internal connection patterns
+                - Separate gating network (another ESN)
+                    - Trained to decide how to weight the different reservoir outputs
+                - Tested on a chaotic laser intensity time series, where dynamics exhibited both fast and slow oscillatory components
+                - Found that the gated ESN mixture significantly outperformed a single ESN
+                - The gating network could dynamically assign higher weight to the expert who "memory length" best matched the current behaviour of the series
+                    - Dynamically adapting the model's time-scale          
+    - Review of existing literature on readout switching in ESNs
+        - Laan & Vicente (2015)
+            - proposed using an ESN with multiple linear readout 'modules'. These modules are individually fitted using regression, and the resulting predictions are combined using a weighted sum over each module. Each module is assigned a randomly instantiated 'controller weight vector', and the weight for each module is derived from multiplying the reservoir states with this controller weight vector. This allows the relative weighting of the modules to change according to the states of the reservoir.
+            - The controller weight vectors are randomly initialised uniformly on [-1, 1] and scaled by a constant. Laan & Vicente trialed different levels of this constant, which controls how sharply the p_i(t) values vary.
+                - Small constant -> uniform mixture -> low specialisation
+                - Large constant -> near 'one-hot' -> hard switching
+                - Intermediate -> smooth switching -> works best empirically.
+            - Shown to improve accuracy on complex time series with switching dynamical regimes, and it is 'guaranteed to perform at least as accurately as a conventional linear readout'.
+        - Ma & Chen (2013) 'Modular State Space ESN (MSSESN)'
+            - Partitions reservoir into multiple sub-rservoirs (modules)
+            - Uses piecewise output function rather than global linear readout
+            - The selection of the module is determined based on the measured activity within each module. The most 'active' module is chosen.
+            - The piecewise linear readout improved prediction performance on non-stationary time series
+            - Allows the output function to be localised to specific state regions, as determined by the reservoir itself.
+    - Review of existing literature on echo state networks with sub reservoirs
+        - Input routing / Context sensitive reservoirs
+            - Argentieri et al. (2022) Input Routed Echo State Networks
+            - 
+        - 'Modular ESNs' (as described by Chester Wringe et al. 2024)
+            - Herbert Jaeger, Discovering multiscale dynamical features with hierarchical echo state networks, Technical Report No. 9, Jacobs University Bremen, 2007
+                - Jaeger's 'Dynamic Feature Discoverer (DFD)'
+                - ESNs are components of larger system
+                - The ESNs in the system are replaceable with other forms of network.
+                - Jaeger arranged multiple ESN modules in a hierarchy, each receiving input from lower-level ESNs, with the lowest level ESN receiving the standard input
+                - To capture different time-scale features
+                    - the 'higher levels' run slower than the 'lower levels'
+                - The higher levels select features from the lower levels and receive those selected features as their input at the following time step.
+                - Detects latent features on different temporal or spatial scales
+            - Accoustic modelling: Triefenbach et al. 2010, 2013
+            - ConvESN: Ma et al. 2021 -> meh
+        - Restricted ESNs
+            - Ma & Chen (2013) 'Modular State Space ESN (MSSESN)'
+                - As described before
+            - Ma et al. 2017b: Dual-Reservoir Network (DRN)
+                - Two 'subreservoirs' are connected with an unsupervised encoder
+                - The weights of the encoder are chosen using Principal Component Analysis
+            - Triefenbach et al. (2013)
+                - Two 'subreservoirs', one receiving input in chronological order and one in reverse chronological
+            - Dale (2018a) Reservoir of Reservoirs
+                - Dense connections within each subreservoirs, sparse random connections between subreservoirs
+                - Two versions of this model: Inputs sent only to a single subreservoir and inputs sent to all
+            - Malik et al. (2017) MultiLayered Echo State Machine
+                - Each subreservoir fully connected to its neighbouring subreservoirs with fixed weights.
+                - Each subreservoirs in sequence, fully connected to neighbouring subreservoirs with fixed weights.
+            - Deep-ESNs
+                - Gallicchio and Micheli 2017
+                - Gallicchio et al. 2017
+                - Ma et al. 2017a
+                - Canaday et al. 2021
+                - Reservoirs arranged sequentially and inputs only sent to first sub-reservoir
+                - Input-to-All subvariants
+            - Grouped-ESN
+                - Subreservoirs arranged in parallel
+                - Introduced by Wcisło & CzechGrouped (2021) "Multi-Layer Echo State Networks with Self-Normalizing Activations"
+                    - Multiple sub reservoirs in stacked layers, each passing the aggregated activations to next layer
+                - Also relevant:
+                    - Z. Li & Tanaka (2021) - "Multi-reservoir echo state networks with sequence resampling for nonlinear time-series prediction"
+                    - Lun et al. (2023) - "Multiple-Reservoir Hierarchical Echo State Network"
+            - Other examples:
+                - aESN - Iinuma et al. (2022)
+                - reBASIC - Kawai et al. 2023a,b
+            - Yanbo Xue, Le Yang, Simon Haykin, Decoupled echo state networks with lateral inhibition, Neural Networks 20 (3) (2007) 365-376
+                - 'Decouples' sections of the inner state by:
+                    - disconnecting subreservoirs, and
+                    - using a lateral inhibition unit to create diversity of responses between the subreservoirs
+    - Explanation of restricted echo state networks
+        - Dividing the internal reservoir states into several smaller subreservoir states.
+        - This is implemented as restrictions on the internal weight matrix W_rec
+        - The state vector can be seen as the concatenation of subreservoir state vectors
+            - s = (s_1, s_2...s_n)
+            - s_i is the states within the subreservoir i
+        - Similar definition of the internal weight matrix using the sub-reservoir weight matrices and matrixes describing connections between subreservoirs
+        - Input vector and readout stays the same
+    - Review of existing literatore on echo state networks with stochastic connections
+        - I have found nothing
+- Testing methods
+    - Multistep predictions
+    - Single step predictions (n steps into the future)
+    - Datasets
+    - Values of m and tau
+    - Treatment of forbidden partitions and matching reservoir sizes for purposes of comparison
+    - Measurements
+        - Errors
+            - RMSE
+            - Turning partition RMSE
+        - Aggregation
+            - Mean
+            - standard deviation
+            - Range (min and max)
+    - Addition of noise
+    - !!! scale dependence -> normalised RMSE
+        - sqrt(<((p-x)^2)>/<(p-<p>)^2>)
+    - NARMA10?
+    - Sunspots?
+- First proposal: readout switching
+    - Explanation
+        - One readout per partition
+    - Implementation
+        - Training: For each partition
+            - Training series is filtered to datapoints with that partition
+            - Regression on the reservoir states is carried out on those filtered datapoints to get the readout for each partition
+        - Testing:
+            - A mask is constructed based on the active partition at each time step (n time steps by num partitions)
+                - 'One-hot-encoded', where 1 indicated the active partition at that time step and 0 indicates the other partitions
+            - The readouts are arranged in a matrix
+            - The states over time matrix (n time steps by num states) is multiplied by the readout matrix (num states by num partitions)
+                - Yielding a prediction at each time step according to each partition (n time steps by num partitions)
+            - The predictions for each partition are then element-wise multiplied by the mask, leave one non-zero element at each time step (row?)
+            - Summing the rows then gives a single prediction at each time step.
+    - Results
+        - Multi-step
+        - Single-step
+        - Resilience to noise
+        - Comparison across attractors
+        - Effect of partition delay size
+- Second proposal: subreservoirs
+    - Explanation
+        - Restricted reservoir
+            - Submatrices
+        - Input masking to active partition
+        - Forbidden partitions are excluded
+            - It is assumed that the training sequence is long enough such that all partitions seen in the training sequence are present in the testing sequence
+    - Implementation
+        - The training series is partitioned and the number of partitions is counted
+        - The W_rec is instantiated as an Erdos-Renyi random network with size k*num_partitions
+        - W_rec is masked based on the number of number of partitions
+        - Connections between reservoirs are created as one-to-one connections
+            - These connections are set equal to the transition probability of the two ordinal partitions
+        - Training:
+            - Training series 
+    - Results
+        - Multi-step
+        - Single-step
+        - Resilience to noise
+        - Comparison across attractors
+        - Effect of partition delay size
+    - Other proposals
+        - Stochastic subreservoirs
+            - Instead of deterministic connections, connections are either activated or zeroed stochastically
+            - Depending on the transition probabilities
+        - Masking the states of the non-active subreservoirs before readout
+        - Internal weight matrix experiments
+            - Set connection
+            - No connecction
+            - Randomise subreservoir connections
+            - Make subreservoirs sparsely connected
+            - Self connections
+- Comparison of methods
+- Conclusion
+
+
+TODO:
+    https://epubs.siam.org/doi/abs/10.1137/22M1476848

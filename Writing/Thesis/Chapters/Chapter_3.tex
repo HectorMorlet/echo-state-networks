@@ -1,0 +1,525 @@
+% !TEX root = ../HonoursThesis.tex
+
+\renewcommand{\chapterlabel}{Chapter}
+\chapter{Ordinal partitions}
+\label{chap:ordinal_partitions}
+
+% - Explanation of ordinal partitions
+%     - Bandt and Pompe
+%         - Encodes segments of a time series into symbols that represent the order relations among data points.
+%         - Parameters
+%             - Embedding dimension
+%             - Embedding delay
+%         - For each sliding window of m points in the series, values are ranked from smallest to largest.
+%         - The relative ranking of indices forms the ordinal pattern
+%         - Give example
+%         - By applying this across the whole time series, one can generate a sequence of ordinal patterns.
+%         - We can then derive a frequency distribution of ordinal patterns from this sequence.
+%         - The frequency distribution (also called 'ordinal probabilities') can then be used to compute information-theoretic measures
+%             - Permutation entropy (the shannon entropy of the ordinal distribution)
+%                 - Quantifies complexity
+%                     - Low values: more regular (predictable or periodic)
+%                     - High values: more complex (stochastic-like dynamics)
+%         Leyva et al. (2022) '20 Years of Ordinal Patterns: Perspectives and Challenges'
+%         - If certain ordinal patterns never occur in a given system, they are termed "forbidden patterns"
+%             - indicates that dynamics may be deterministic rather than pure noise.
+% - Feature selection of ordinal partitions
+%     - Liu et al. (2020)
+%         - Proposed ordinal pattern representation for EEG time series to detect epileptic seizures
+%         - Ordinally partitioned EEG time series and derived the:
+%             - Distribution of ordinal patterns
+%             - Distribution of ordinal pattern adjacency pairs
+%         - Used these features as input into a k-Nearest Neighbour classifier
+%             - achieved over 90\% accuracy, sensitivity, and specificity on benchmark seizure datasets
+%             - outperformed several state-of-the-art methods.
+%         - Shows that ordinal partitions are a useful discriminatory feature
+%     - Boaretto et al. "Discriminating chaotic and stochastic time series using permutation entropy and artificial neural networks"
+%         - Used ordinal transition probabilities as input into ANN for categorising chaotic and stochastic time series
+% - Ordinal analysis for change point detection
+%     - Sinn et al. (2013)
+%         - Ordinal analysis => change point detection
+%             - Demonstrated that ordinal pattern distribution of a time series reflect its underlying dynamics.
+%             - Changes in dynamics cause shifts in the distribution.
+%         - Two algorithms to detect dynamic regime changes
+%             - A kernel-based distance between ordinal distributions (Maximum Mean Discrepancy)
+%             - Clustering ordinal distributions
+%     - This methodology has been applied to real-world data
+%         - Zanin, M. (2013). "Forbidden patterns in financial time series"
+%         - Sinn, M., Ghodsi, A., \& Keller, K. (2012). "Detecting Change-Points in Time Series by Maximum Mean Discrepancy of Ordinal Pattern Distributions"
+%             - ECG \& EEG recordings
+% - Other less relevant stuff
+%     - Ordinal partitions for analysis of reservoirs
+%         - Thorne et al. (2022)
+%             - compared ordinal permutation entropy to estimates of complexity derived from echo state networks. The research showed clear connection between the complexity characteristics of a signal and the structure of the reservoir computer when driven with that signal, and suggested that the permutation entropy could be used to make structural choices about the ESN, such as connectiveness or spectral radius.
+%         - Sun et al. (2022) "Reservoir Dynamic Interpretability for Time Series Prediction: A Permutation Entropy View"
+%             - Applied Bandt \& Pompe's method to the states of reservoir neurons over time, yielding:
+%                 - "Instantaneous State Entropy (ISE)", the entropy of the full reservoir state at each time step
+%                     - High ISE -> a reservoir state is high entropy
+%                 - "Global State Entropy (GSE)", the entropy of the distribution of individual-neuron entropy values
+%                     - High GSE -> large variation in behaviour across reservoir neurons
+%             - Found that certain reservoir entropy levels correlated with better projection capability and forecasting accuracy.
+%     - Zanin (2023) - Continuous Ordinal Patterns
+%         - Generalisation of ordinal analysis
+%         - Ordinal patterns are defined continuously
+%         - Optimised for specific problem
+% - Leyva et al. (2022) - 20 Years of Ordinal Patterns: Perspectives and Challenges
+%     - Outlines 'promising research directions'
+%     - "More research is needed to better understand the statistical properties of the ordi- nal patterns, and in particular, the values of the ordinal probabilities. If the exis- tence of ordinal patterns with similar probabilities turns out to be a generic prop- erty of certain dynamical systems, this should be taken into account when com- bining ordinal analysis with machine learning, as a proper selection of the input features (ordinal probabilities) will avoid feeding the machine learning algorithm with redundant features."
+% - Interpretability
+%     - Ordinal features are inherently interpretable
+%     - Patterns might be forbidden or over-represented
+%     - This justifies the model's decisions in terms of known dynamical properties
+
+    
+% `Ordinal analysis', first introduced by Bandt and Pompe (2002), proposed using the ordering of data points to partition a time series. Each data point in the time series is partitioned according to the ordering of its preceding points, and assigned a unique `ordinal symbol', for example numbers from 1 to 6.
+
+% The probabilities of the time series transitioning from one partition to another can be calculated, giving the `ordinal transition probabilities'.
+
+
+
+
+
+
+% \begin{figure}
+%     \centering
+%     \begin{tikzpicture}
+%         \begin{axis}[
+%             xlabel={Time},
+%             ylabel={$x(t)$},
+%             title={Lorenz Attractor: $x$-component},
+%             width=10cm, height=6cm,
+%             grid=major
+%         ]
+%         % Data generated by solving dx/dt = sigma(y - x), etc. in Python
+%         \addplot[black, mark=*, mark options={black}] coordinates {
+%             (0.0, 2.2165566502619796)
+%             (0.1, 3.0181360987381685)
+%             (0.2, 4.2948078524935065)
+%             (0.3, 6.231121537780632)
+%             (0.4, 8.970926893912857)
+%             (0.5, 12.272230400810887)
+%             (0.6, 14.887997312478161)
+%             (0.7, 14.803117347063516)
+%             (0.8, 11.606868473299526)
+%             (0.9, 7.330990437181266)
+%             (1.0, 3.85191889651296)
+%             (1.1, 1.6347534154776406)
+%             (1.2, 0.3853895148599277)
+%             (1.3, -0.30838099414996695)
+%             (1.4, -0.7586726217449103)
+%             (1.5, -1.1695821908357407)
+%             (1.6, -1.6858338981790886)
+%             (1.7, -2.443141458426554)
+%             (1.8, -3.6086854451117074)
+%             (1.9, -5.40339197322587)
+%             (2.0, -8.058505977971057)
+%             (2.1, -11.547145254692042)
+%             (2.2, -14.884182443761347)
+%             (2.3, -15.775516623377253)
+%             (2.4, -12.908181797239536)
+%             (2.5, -8.181376578133673)
+%             (2.6, -4.06724026097539)
+%             (2.7, -1.3665393788429014)
+%             (2.8, 0.20110496364168012)
+%             (2.9, 1.1324784341364973)
+%             (3.0, 1.8245674314417792)
+%             (3.1, 2.5516132966355554)
+%             (3.2, 3.5214281335608555)
+%             (3.3, 4.926987945369609)
+%             (3.4, 6.951562500713474)
+%             (3.5, 9.654345729238477)
+%             (3.6, 12.617195234374243)
+%             (3.7, 14.521825487882024)
+%             (3.8, 13.806356286601272)
+%             (3.9, 10.64113968132102)
+%             (4.0, 6.880279139891668)
+%             (4.1, 3.9367704788159394)
+%             (4.2, 2.1029851064946445)
+%             (4.3, 1.121305395878461)
+%             (4.4, 0.665491176850325)
+%             (4.5, 0.5051437108082056)
+%             (4.6, 0.5156168027361644)
+%             (4.7, 0.6490783162490397)
+%             (4.8, 0.9105168761220792)
+%         };
+%         \end{axis}
+%     \end{tikzpicture}
+%     \caption{This is the caption}
+%     \label{fig:label}
+% \end{figure}
+
+
+
+
+
+
+
+
+
+Ordinal partition analysis, introduced by Bandt and Pompe~\cite{bandt_pompe_2002}, provides a method for transforming a time series into a sequence of discrete symbols based on the relative order of values within segments of the series. This technique focuses on the inherent order relations present in the data, making it invariant to monotonic transformations and less sensitive to observational noise compared to methods relying on absolute values. The core idea involves mapping sliding windows of the time series data onto \emph{ordinal patterns}.
+
+\section{Ordinal partitions and their measures}
+
+\subsection{Generating the ordinal partition}
+
+The process begins by choosing two key parameters: the embedding dimension $m\ge2$, which sets the length of each segment (or vector) to compare, and the embedding delay $\tau\ge1$, which specifies the time gap between successive points in that segment. For a time series $\{x_t\}_{t=1}^N$, we form overlapping vectors
+% \[
+% \mathbf{x}_t = \bigl(x_t,\,x_{t+\tau},\,\dots,\,x_{t+(m-1)\tau}\bigr),
+% \quad t=1,2,\dots,N-(m-1)\tau.
+% \]
+\[
+\mathbf{x}_t = \bigl(x_{t-(m-1)\tau},\,\dots,x_{t-\tau},\,x_t\bigr),
+\quad t=1+(m-1)\tau,\dots,N-1,N
+\]
+which we can use to create a rank vector 
+\[
+  \mathbf{\rho}_t = (\rho_{t,1},\dots,\rho_{t,m}),
+\]
+where $x_{\,t+(i-1)\tau}$ is the $\rho_{t,i}$-th largest of $\mathbf{x}_t$ for each $i \in [1,...,m]$.
+
+Ties are broken by giving the lower rank to the earlier index (i.e.\ if 
+\(x_{t+i\tau}=x_{t+j\tau}\) with \(i<j\), then \(\rho_{t,i}<\rho_{t,j}\)).  
+Bandt \& Pompe originally introduced the method using an inverse representation, where each $\rho_{t,i}$ is the index of $\mathbf{x}_t$ at which the value has rank $i$. The two representations carry equivalent information for the purpose of creating an ordinal partitioning of a time series. By this definition a data point's partition is determined by its preceding points (`backward') while most definitions have it determined by its following points (`forward'). Here we have used the backward definition because each point will be used for prediction, where future data points are unknown. While the forward definition is generally assumed, some literature has used the backward definition for similar reasons~\cite{keller_2007}.
+
+\begin{figure}
+    \begin{center}
+        \begin{tikzpicture}[scale=0.95]
+            % partition 1
+
+            \node[circle, draw, fill=col1] (topleft) at (-5.0, 3) {};
+
+            % Draw the equality sign
+            \node at (-4.6, 3) {$=$};
+            
+            % Draw the nodes in the lower part
+            \node[circle, draw] (1_2) at (-4.0, 4) {1};
+            \node[circle, draw] (1_1) at (-3.25, 3) {2};
+            \node[circle, draw, thick, fill=col1] (1_3) at (-2.5, 2) {3};
+            
+            % Draw edges
+            \draw (1_1) -- (1_2);
+            \draw (1_1) -- (1_3);
+
+            % Draw dividing line
+            \draw[gray, very thin] (-1.6, 5) -- (-1.6, -3);
+
+            % partition 2
+
+            \node[circle, draw, fill=col2] (topcentre) at (-1, 3) {};
+
+            % Draw the equality sign
+            \node at (-0.6, 3) {$=$};
+            
+            % Draw the nodes in the lower part
+            \node[circle, draw] (2_2) at (0, 4) {1};
+            \node[circle, draw] (2_1) at (0.75, 2) {3};
+            \node[circle, draw, thick, fill=col2] (2_3) at (1.5, 3) {2};
+            
+            % Draw edges
+            \draw (2_1) -- (2_2);
+            \draw (2_1) -- (2_3);
+
+            % Draw dividing line
+            \draw[gray, very thin] (2.5, 5) -- (2.5, -3);
+
+            % partition 3
+
+            \node[circle, draw, fill=col3] (topleft) at (3.0, 3) {};
+
+            % Draw the equality sign
+            \node at (3.4, 3) {$=$};
+            
+            % Draw the nodes in the lower part
+            \node[circle, draw] (3_2) at (4.0, 3) {2};
+            \node[circle, draw] (3_1) at (4.75, 4) {1};
+            \node[circle, draw, thick, fill=col3] (3_3) at (5.5, 2) {3};
+            
+            % Draw edges
+            \draw (3_1) -- (3_2);
+            \draw (3_1) -- (3_3);
+
+            % Draw dividing line
+            \draw[gray, very thin] (-5, 1) -- (6, 1);
+
+            % partition 4
+
+            \node[circle, draw, fill=col4] (bottomleft) at (-5.0, -1.5) {};
+
+            % Draw the equality sign
+            \node at (-4.6, -1.5) {$=$};
+            
+            % Draw the nodes in the lower part
+            \node[circle, draw] (4_2) at (-4.0, -1.5) {2};
+            \node[circle, draw] (4_1) at (-3.25, -2.5) {3};
+            \node[circle, draw, thick, fill=col4] (4_3) at (-2.5, -0.5) {1};
+            
+            % Draw edges
+            \draw (4_1) -- (4_2);
+            \draw (4_1) -- (4_3);
+
+            % Draw dividing line
+            % \draw[gray, very thin] (-2.25, -3) -- (-2.25, -5);
+
+            % partition 5
+
+            \node[circle, draw, fill=col5] (bottomcentre) at (-1, -1.5) {};
+
+            % Draw the equality sign
+            \node at (-0.6, -1.5) {$=$};
+            
+            % Draw the nodes in the lower part
+            \node[circle, draw] (5_2) at (0, -2.5) {3};
+            \node[circle, draw] (5_1) at (0.75, -1.5) {2};
+            \node[circle, draw, thick, fill=col5] (5_3) at (1.5, -0.5) {1};
+            
+            % Draw edges
+            \draw (5_1) -- (5_2);
+            \draw (5_1) -- (5_3);
+
+            % partition 6
+
+            \node[circle, draw, fill=col6] (bottomright) at (3.0, -1.5) {};
+
+            % Draw the equality sign
+            \node at (3.4, -1.5) {$=$};
+            
+            % Draw the nodes in the lower part
+            \node[circle, draw] (6_2) at (4.0, -2.5) {3};
+            \node[circle, draw] (6_1) at (4.75, -0.5) {1};
+            \node[circle, draw, thick, fill=col6] (6_3) at (5.5, -1.5) {2};
+            
+            % Draw edges
+            \draw (6_1) -- (6_2);
+            \draw (6_1) -- (6_3);
+        \end{tikzpicture}
+    \end{center}
+    \caption{A visualisation of all 6 possible ordinal partitions when $m=3$.}
+    \label{fig:ordinal_partition_diagram}
+\end{figure}
+
+For example, consider $m=3$ and $\tau=1$. Figure \ref{fig:ordinal_partition_diagram} gives a visual representation of all 6 possible rank orderings any three data points could form. If we consider a segment of a time series $(x_t, x_{t+1}, x_{t+2}) = (4, 7, 2)$ then the values ranked are $x_{t+2} \le x_t \le x_{t+1}$. The corresponding rankings are $(2, 1, 3)$, so the ordinal pattern is $(2, 1, 3)$. By applying this procedure across the entire time series, a sequence of ordinal patterns is generated, effectively converting the original continuous or discrete-valued series into a symbolic sequence drawn from the $m!$ possible permutations. An example of a partitioned time series is given in Figure \ref{fig:ordinal_partitioned_example_time_series}, where each data point has been colour coded depending on its ordinal partition.
+
+\begin{figure}[h]
+    % \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        % xlabel={Time},
+        % ylabel={$x(t)$},
+        % title={Lorenz Attractor: $x$-component},
+        width=14.5cm, height=8cm,
+        grid=major
+    ]
+
+
+    \addplot [
+        thick, % or any style you like
+    ] coordinates {
+        (0.0, 2.2165566502619796)
+        (0.1, 3.0181360987381685)
+        (0.2, 4.2948078524935065)
+        (0.3, 6.231121537780632)
+        (0.4, 8.970926893912857)
+        (0.5, 12.272230400810887)
+        (0.6, 14.887997312478161)
+        (0.7, 14.803117347063516)
+        (0.8, 11.606868473299526)
+        (0.9, 7.330990437181266)
+        (1.0, 3.85191889651296)
+        (1.1, 1.6347534154776406)
+        (1.2, 0.3853895148599277)
+        (1.3, -0.30838099414996695)
+        (1.4, -0.7586726217449103)
+        (1.5, -1.1695821908357407)
+        (1.6, -1.6858338981790886)
+        (1.7, -2.443141458426554)
+        (1.8, -3.6086854451117074)
+        (1.9, -5.40339197322587)
+        (2.0, -8.058505977971057)
+        (2.1, -11.547145254692042)
+        (2.2, -14.884182443761347)
+        (2.3, -15.775516623377253)
+        (2.4, -12.908181797239536)
+        (2.5, -8.181376578133673)
+        (2.6, -4.06724026097539)
+        (2.7, -1.3665393788429014)
+        (2.8, 0.20110496364168012)
+        (2.9, 1.1324784341364973)
+        (3.0, 1.8245674314417792)
+        (3.1, 2.5516132966355554)
+        (3.2, 3.5214281335608555)
+        (3.3, 4.926987945369609)
+        (3.4, 6.951562500713474)
+        (3.5, 9.654345729238477)
+        (3.6, 12.617195234374243)
+        (3.7, 14.521825487882024)
+        (3.8, 13.806356286601272)
+        (3.9, 10.64113968132102)
+        (4.0, 6.880279139891668)
+        (4.1, 3.9367704788159394)
+        (4.2, 2.1029851064946445)
+        (4.3, 1.121305395878461)
+        (4.4, 0.665491176850325)
+        (4.5, 0.5051437108082056)
+        (4.6, 0.5156168027361644)
+        (4.7, 0.6490783162490397)
+        (4.8, 0.9105168761220792)
+    };
+    
+    
+    % Define how each "class" (symbolic label) is colored and drawn:
+    \addplot[
+        scatter,
+        only marks,
+        scatter src=explicit symbolic,
+        scatter/classes={
+            1={mark=*,draw=col1,fill=col1, mark size=4},
+            2={mark=*,draw=col2,fill=col2, mark size=4},
+            3={mark=*,draw=col3,fill=col3, mark size=4},
+            4={mark=*,draw=col4,fill=col4, mark size=4},
+            5={mark=*,draw=col5,fill=col5, mark size=4},
+            6={mark=*,draw=col6,fill=col6, mark size=4}
+        }
+    ] 
+    coordinates {
+        (0.0, 2.2165566502619796)[2]
+        (0.1, 3.0181360987381685)[5]
+        (0.2, 4.2948078524935065)[5]
+        (0.3, 6.231121537780632)[5]
+        (0.4, 8.970926893912857)[5]
+        (0.5, 12.272230400810887)[5]
+        (0.6, 14.887997312478161)[5]
+        (0.7, 14.803117347063516)[6]
+        (0.8, 11.606868473299526)[1]
+        (0.9, 7.330990437181266)[1]
+        (1.0, 3.85191889651296)[1]
+        (1.1, 1.6347534154776406)[1]
+        (1.2, 0.3853895148599277)[1]
+        (1.3, -0.30838099414996695)[1]
+        (1.4, -0.7586726217449103)[1]
+        (1.5, -1.1695821908357407)[1]
+        (1.6, -1.6858338981790886)[1]
+        (1.7, -2.443141458426554)[1]
+        (1.8, -3.6086854451117074)[1]
+        (1.9, -5.40339197322587)[1]
+        (2.0, -8.058505977971057)[1]
+        (2.1, -11.547145254692042)[1]
+        (2.2, -14.884182443761347)[1]
+        (2.3, -15.775516623377253)[1]
+        (2.4, -12.908181797239536)[4]
+        (2.5, -8.181376578133673)[5]
+        (2.6, -4.06724026097539)[5]
+        (2.7, -1.3665393788429014)[5]
+        (2.8, 0.20110496364168012)[5]
+        (2.9, 1.1324784341364973)[5]
+        (3.0, 1.8245674314417792)[5]
+        (3.1, 2.5516132966355554)[5]
+        (3.2, 3.5214281335608555)[5]
+        (3.3, 4.926987945369609)[5]
+        (3.4, 6.951562500713474)[5]
+        (3.5, 9.654345729238477)[5]
+        (3.6, 12.617195234374243)[5]
+        (3.7, 14.521825487882024)[5]
+        (3.8, 13.806356286601272)[6]
+        (3.9, 10.64113968132102)[1]
+        (4.0, 6.880279139891668)[1]
+        (4.1, 3.9367704788159394)[1]
+        (4.2, 2.1029851064946445)[1]
+        (4.3, 1.121305395878461)[1]
+        (4.4, 0.665491176850325)[1]
+        (4.5, 0.5051437108082056)[1]
+        (4.6, 0.5156168027361644)[2]
+        (4.7, 0.6490783162490397)[5]
+        (4.8, 0.9105168761220792)[5]
+    };
+    
+    \end{axis}
+    \end{tikzpicture}
+    \caption{A time series with data points colour-coded by ordinal partition.}
+    \label{fig:ordinal_partitioned_example_time_series}
+\end{figure}
+
+To provide a concise reference to these ordinal partitions, each partition is allocated an `ordinal symbol'. Where we have used colours in our diagrams, one might usually use integers to refer to each ordinal partition, although the allocation of these symbols is arbitrary. Table \ref{tab:ordinal_symbols} gives an example of how one might allocate ordinal symbols to the partitions in our $m=3$ example. Once a rank vector $\rho_t$ has been found for each data point in our time series $\{x_t\}_{t=1}^N$, allocating an ordinal symbol $\pi_t$ to each rank vector will yield a time series of ordinal symbols $\Pi = (\pi_1,...,\pi_N)$.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{c|c}
+        Ordinal symbol & Ordinal patterns \\
+        \hline
+        \cellcolor{col1}1 & \cellcolor{col1!30}[1, 2, 3] \\
+        \cellcolor{col2}2 & \cellcolor{col2!30}[1, 3, 2] \\
+        \cellcolor{col3}3 & \cellcolor{col3!30}[2, 1, 3] \\
+        \cellcolor{col4}4 & \cellcolor{col4!30}[2, 3, 1] \\
+        \cellcolor{col5}5 & \cellcolor{col5!30}[3, 2, 1] \\
+        \cellcolor{col6}6 & \cellcolor{col6!30}[3, 1, 2] \\
+    \end{tabular}
+    \caption{Example: Ordinal patterns and their allocated ordinal symbols for $m=3$.}
+    \label{tab:ordinal_symbols}
+\end{table}
+
+While the standard Bandt-Pompe method uses discrete ordinal patterns, generalizations have been proposed. Zanin~\cite{zanin_2023} introduced the concept of \emph{Continuous Ordinal Patterns}, where patterns are defined in a continuous space, allowing for optimization tailored to specific problems.
+
+\subsection{Probabilities}
+% $P = \{p(\pi_i)\}_{i=1}^{m!}$
+From an ordinal symbolic sequence, a probability distribution can be estimated by calculating the relative frequency of each unique ordinal pattern $\pi_i$. This distribution, referred to as the \emph{ordinal probability distribution}, captures essential information about the temporal structure and dynamics of the underlying system. A key measure derived from this distribution is the \emph{Permutation Entropy} (PE), defined as the Shannon entropy of the ordinal probabilities~\cite{bandt_pompe_2002}:
+\[
+    H(m, \tau) = -\sum_{i=1}^{m!} p(\pi_i) \log_2 p(\pi_i).
+\]
+Permutation entropy quantifies the complexity of the time series as reflected in the diversity and predictability of its ordinal patterns~\cite{bandt_pompe_2002}. Low PE values indicate a high degree of regularity, such as in periodic or highly predictable series where only a few patterns dominate. Conversely, high PE values (approaching the maximum of $\log_2(m!)$) suggest more complex, potentially stochastic-like dynamics where patterns occur with closer to uniform probability.
+
+Beyond the static distribution of patterns, further dynamical information can be extracted by examining the transitions between consecutive ordinal patterns in the sequence $\Pi$. The \emph{ordinal transition probabilities}, $p(\pi_j | \pi_i)$, quantify the likelihood that pattern $\pi_j$ occurs at time $t+1$, given that pattern $\pi_i$ occurred at time $t$. These probabilities are estimated by counting the frequency of adjacent pairs $(\pi_i, \pi_j)$ in the sequence and normalising appropriately. Analysing these transitions provides insights into the temporal dependencies and correlations within the series at the level of ordinal structure, offering a higher-order characterisation compared to the simple pattern frequencies alone. The ordinal transition probabilities for our example time series can be found in Table \ref{tab:transition_probabilities}.
+
+\begin{table}[]
+    \centering
+    \begin{tabular}{c|cccccc}
+        & \tikz\draw[fill=col1,draw=col1] (0,0) circle (0.9ex); 
+        & \tikz\draw[fill=col2,draw=col2] (0,0) circle (0.9ex); 
+        & \tikz\draw[fill=col3,draw=col3] (0,0) circle (0.9ex); 
+        & \tikz\draw[fill=col4,draw=col4] (0,0) circle (0.9ex); 
+        & \tikz\draw[fill=col5,draw=col5] (0,0) circle (0.9ex); 
+        & \tikz\draw[fill=col6,draw=col6] (0,0) circle (0.9ex); \\ \hline
+        \tikz\draw[fill=col1,draw=col1] (0,0) circle (0.9ex); & 0.7 & 0.1 & 0.1 & 0.05 & 0.05 & 0.0 \\
+        \tikz\draw[fill=col2,draw=col2] (0,0) circle (0.9ex); & 0.0 & 0.0 & 0.0 & 0.0 & 0.9 & 0.1 \\
+        \tikz\draw[fill=col3,draw=col3] (0,0) circle (0.9ex); & 0.7 & 0.1 & 0.1 & 0.05 & 0.05 & 0.0 \\
+        \tikz\draw[fill=col4,draw=col4] (0,0) circle (0.9ex); & 0.0 & 0.0 & 0.0 & 0.0 & 0.9 & 0.1 \\
+        \tikz\draw[fill=col5,draw=col5] (0,0) circle (0.9ex); & 0.0 & 0.0 & 0.0 & 0.0 & 0.9 & 0.1 \\
+        \tikz\draw[fill=col6,draw=col6] (0,0) circle (0.9ex); & 0.7 & 0.05 & 0.05 & 0.05 & 0.05 & 0.1 \\
+    \end{tabular}
+    \caption{Ordinal transition probabilities for the example time series in Figure \ref{fig:ordinal_partitioned_example_time_series}. Each entry $p(\pi_j | \pi_i)$ gives the probability of transitioning from ordinal partition $\pi_i$ at time $t$ to $\pi_j$ at time $t+1$.}
+    \label{tab:transition_probabilities}
+\end{table}
+
+\subsection{Forbidden patterns}
+
+A significant aspect of ordinal analysis is the concept of \emph{forbidden patterns}. If certain ordinal patterns out of the $m!$ possibilities never appear in the symbolic sequence generated from a sufficiently long time series, they are termed forbidden patterns~\cite{amigo_2007}. The existence of forbidden patterns is a strong indicator that the underlying dynamics are not purely stochastic, but possess some deterministic structure. This is because purely random processes are expected to eventually exhibit all possible ordinal patterns (given stationarity and sufficient length). The identification of forbidden patterns has been explored in various contexts, including financial time series~\cite{zanin_2013}.
+
+\subsection{Choosing $\tau$ and $m$}
+
+The selection of $\tau$ and $m$ is important to accurately represent the dynamics of the time series. If a $\tau$ or $m$ is selected too small, there may be many repeated monotonic patterns and this can underestimate complexity as measured by PE~\cite{riedl_2013}. If $\tau$ or $m$ is selected too large, there may be many patterns with very few observations or a spuriously high number of forbidden patterns~\cite{riedl_2013}.
+
+Common methods for selecting $\tau$ include picking the first zero of the autocorrelation, or the first minimum of average mutual information~\cite{riedl_2013}. However, in this research we have performed an RMSE based search, selecting an optimal $\tau$ for the purpose of time series prediction with the proposed models.
+For most common purposes it is recommended to increase $m$ until the PE stops rising~\cite{riedl_2013}, but for this research we have tested all practical values where $m\leq4$, for reasons explained in Chapter \ref{chap:testing_methods}.
+
+
+
+\section{Applications of ordinal analysis}
+
+Ordinal patterns and their derived measures have proven to be effective features in various time series analysis tasks, including classification and change-point detection.
+
+\subsection{Classification}
+Liu et al. demonstrated the utility of ordinal representations for classifying EEG time series to detect epileptic seizures~\cite{liu_2020}, building from previous efforts that use permutation entropy to analyse EEG data~\cite{keller_2007}. They ordinally partitioned EEG signals and extracted features based on both the distribution of individual ordinal patterns and the distribution of adjacent pattern pairs (ordinal transitions). Using these features as input to a k-Nearest Neighbour (k-NN) classifier, they achieved high accuracy, sensitivity, and specificity (over 90\%) on benchmark seizure datasets, outperforming several contemporary methods.
+These results demonstrate that ordinal patterns can be an effective feature to discriminate between physiological signals.
+Similarly, Boaretto et al. used ordinal-pattern probability vectors as inputs for Artificial Neural Networks (ANNs) to effectively distinguish between chaotic and stochastic time series~\cite{boaretto_2021}. Both of these examples demonstrate that ordinal representations are an effective feature for classification tasks.
+
+\subsection{Change point detection}
+The sensitivity of the ordinal pattern distribution to the underlying dynamics of a time series makes it suitable for detecting regime changes. Sinn et al. proposed methods for change point detection based on the principle that a shift in dynamics will manifest as a statistically significant change in the observed ordinal distribution~\cite{sinn_2012}. They developed two algorithms: one employing a kernel-based distance metric, the Maximum Mean Discrepancy (MMD), to compare ordinal distributions from consecutive time windows, and another based on clustering ordinal distributions over time. This methodology has been successfully applied to detect changes in real-world data, including physiological recordings like ECG and EEG~\cite{sinn_2012} and financial time series~\cite{zanin_2013}. Although these examples employ the ordinal distributions rather than the raw symbols themselves, they nonetheless demonstrate that ordinal symbols provide an effective representation of the underlying dynamics for time series analysis tasks. 
+
+\subsection{Analysis of reservoir computing systems}
+Ordinal analysis has also been applied to understand the internal dynamics of reservoir computing (RC) systems, particularly ESNs. Thorne et al.  compared permutation entropy calculated from ESN output signals with complexity estimates derived directly from the reservoir's internal state dynamics~\cite{thorne_2022}. Their findings indicated a clear link between the complexity of the driving signal (measured by PE) and the emergent structure and dynamics within the reservoir, suggesting PE could inform choices about ESN hyperparameters like connectivity or spectral radius. Sun et al. applied ordinal analysis directly to the time series of individual reservoir neuron states~\cite{sun_2022}. They defined an ``Instantaneous State Entropy (ISE)" based on the diversity of ordinal patterns across all neurons at a single time step, and a ``Global State Entropy (GSE)" reflecting the variability in entropy across different neurons over time. They found correlations between these reservoir entropy measures and the network's forecasting performance, providing insights into the interpretability of reservoir dynamics.
+
+\subsection{Ordinal partitions as a predictive feature}
+
+The preceding examples demonstrate the effectiveness of ordinal partitions and their derived features for analysing time series. This motivates further exploration of ordinal partitions as an input to models for time series prediction. While most prior work has focused on using ordinal pattern probabilities as features, there are compelling reasons to consider the ordinal partitions themselves. By segmenting the input space into distinct ordinal patterns, these partitions naturally lend themselves to piecewise or mixture-of-experts modeling approaches, where different model components can specialize in autoregressive prediction conditioned on particular ordinal patterns.
+
+While direct integration of ordinal partitions into ESN architectures as proposed in this thesis is novel, in their review Leyva et al. suggest that ordinal probabilities have the potential to inform model decisions in machine learning contexts~\cite{leyva_2022}. Ordinal features offer several practical advantages. They are inherently scale-invariant and robust to noise, making them representative features for real-world time series data that may be chaotic or noisy~\cite{bandt_pompe_2002}. Unlike more complex feature extraction methods such as wavelet decompositions, empirical mode decomposition, or deep autoencoder representations, ordinal partitions are simple and computationally efficient to compute. Their interpretability is another major strength: ordinal patterns simply represent the local ordering and thus recent dynamics of the data, so improvements in model performance by including these features can be attributed to the model's ability to exploit meaningful temporal structure rather than obscure or uninterpretable transformations. Taken together, these properties make ordinal partitions an attractive predictive feature for time series prediction, warranting further experimentation in predictive MOE models.
+
+In the following chapters, we apply ordinal partitions as a predictive feature in novel ESN architectures. In Chapter \ref{chap:ORSESN} we use the ordinal partition to drive the gating of a piecewise readout function, and in Chapter \ref{chap:OPESNs} we use ordinal partitions to drive the input routing of a modular ESN. Both of these models receive the time series as the input series while the contemporaneous ordinal symbols are used in routing/gating. This hybrid input retains the ESN's lightweight training while making use of ordinal partitions.

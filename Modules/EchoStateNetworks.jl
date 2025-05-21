@@ -4,6 +4,8 @@ greet() = print("EchoStateNetworks module... TODO greeting here.")
 
 using SparseArrays
 using LinearAlgebra
+using Statistics
+
 
 include("StandardFunctions.jl")
 using .StandardFunctions
@@ -23,8 +25,8 @@ struct ESNParameters
     masked_V_recs::Dict{Vector{Int}, Matrix{Float64}}
 end
 
-function create_ESN_params(k, d, ρ, α, η, β; num_partitions=1, ON_part_adjacency=nothing, ON_part_set_connection=nothing)
-    V_in, V_rec, V_bias = create_ESN(k, d, ρ, num_partitions=num_partitions, ON_part_adjacency=ON_part_adjacency, set_connection=ON_part_set_connection)
+function create_ESN_params(k, d, ρ, α, η, β; num_partitions=1, ON_part_adjacency=nothing, ON_part_set_connection=nothing, testing_params=create_testing_params())
+    V_in, V_rec, V_bias = create_ESN(k, d, ρ, num_partitions=num_partitions, ON_part_adjacency=ON_part_adjacency, set_connection=ON_part_set_connection, testing_params=testing_params)
     ESN_params = ESNParameters(V_in, V_rec, V_bias, k, α, η, β, ρ, num_partitions,
         Dict{Vector{Int}, Matrix{Float64}}())
     
@@ -55,24 +57,44 @@ end
 # mask_adjacency!(test_matrix, test_k, test_m, test_part_connection, test_ON_part_adjacency)
 
 # test_matrix
-function mask_adjacency!(V_rec, k, num_partitions, ON_part_adjacency; set_connection = nothing)
+function mask_adjacency!(V_rec, k, num_partitions, ON_part_adjacency; set_connection = nothing, testing_params=create_testing_params())
     for part_i in 1:num_partitions
         for part_j in 1:num_partitions
             # self loops in the OTN
-            if part_i == part_j
+            if part_i == part_j && !testing_params.add_self_loops
                 continue
+            end
+
+            if testing_params.layer_connections_one_to_one_constant_value || testing_params.layer_connections_fully_connected_constant_value
+                avg_matrix_value = mean(V_rec)
             end
             
             if part_i != part_j
-                V_rec[(part_i-1)*k+1:part_i*k,(part_j-1)*k+1:part_j*k] .= 0.0
+                if !(testing_params.layer_connections_sparsely_connected && ON_part_adjacency[part_i,part_j] > 0)
+                    V_rec[(part_i-1)*k+1:part_i*k,(part_j-1)*k+1:part_j*k] .= 0.0
+                end
             end
             
             if ON_part_adjacency[part_i,part_j] > 0
                 for i in 1:k
-                    if set_connection == nothing
-                        V_rec[(part_i-1)*k+i,(part_j-1)*k+i] = ON_part_adjacency[part_i, part_j]
+                    if testing_params.layer_connections_one_to_one_constant_value
+                        V_rec[(part_i-1)*k+i,(part_j-1)*k+i] = avg_matrix_value
+                    elseif testing_params.layer_connections_one_to_one_randomised
+                        V_rec[(part_i-1)*k+i,(part_j-1)*k+i] = randn()
+                    elseif testing_params.layer_connections_fully_connected_trans_probs
+                        for j in 1:k
+                            V_rec[(part_i-1)*k+i,(part_j-1)*k+j] = ON_part_adjacency[part_i, part_j]
+                        end
+                    elseif testing_params.layer_connections_fully_connected_constant_value
+                        for j in 1:k
+                            V_rec[(part_i-1)*k+i,(part_j-1)*k+j] = avg_matrix_value
+                        end
+                    elseif testing_params.layer_connections_sparsely_connected
+                        continue # this is done earlier in the function
+                    elseif testing_params.layer_connections_disconnected
+                        continue
                     else
-                        V_rec[(part_i-1)*k+i,(part_j-1)*k+i] = set_connection
+                        V_rec[(part_i-1)*k+i,(part_j-1)*k+i] = ON_part_adjacency[part_i, part_j]
                     end
                 end
             end
@@ -81,19 +103,16 @@ function mask_adjacency!(V_rec, k, num_partitions, ON_part_adjacency; set_connec
 end
 
 
-function create_ESN(k, d, ρ; num_partitions=1, ON_part_adjacency=nothing, set_connection=nothing)
+function create_ESN(k, d, ρ; num_partitions=1, ON_part_adjacency=nothing, set_connection=nothing, testing_params=create_testing_params())
     V_in = randn(k*num_partitions)
     
     V_rec = erdos_renyi_adjacency(k*num_partitions, d*num_partitions)
-    # println("The prescribed d is ", d)
-    # println("The resulting d is ", sum([sum(V_rec[1+k*i:k+k*i, 1+k*i:k+k*i] .> 0)/k for i in 0:(num_partitions-1)])/num_partitions)
-    # return()
     
     if ON_part_adjacency != nothing
         # Rescale adjacency to be only as large as largest weight
         ON_part_adjacency = ON_part_adjacency/maximum(ON_part_adjacency)*maximum(V_rec)
 
-        mask_adjacency!(V_rec, k, num_partitions, ON_part_adjacency, set_connection=set_connection)
+        mask_adjacency!(V_rec, k, num_partitions, ON_part_adjacency, set_connection=set_connection, testing_params=testing_params)
     end
     
     max_abs_ev = maximum(abs.(eigen(V_rec).values))
@@ -122,21 +141,45 @@ function mask_V_in_for_partition(V_in, partition, k, num_partitions)
     return(masked_V_in)
 end
 
-function run_ESN(x, ESN_params; S = nothing, partition_symbols = nothing)
+function run_ESN(x, ESN_params; S = nothing, partition_symbols = nothing, testing_params=create_testing_params())
     if S === nothing
         S = randn(ESN_params.k*ESN_params.num_partitions)
     end
     
     states = zeros(Float64, ESN_params.k*ESN_params.num_partitions, length(x))
+
+    # println("Testing for nothing in partition symbols in run ESN")
+    # if partition_symbols !== nothing
+    #     idx_first_non = findfirst(sym -> sym !== nothing, partition_symbols)
+    #     @assert idx_first_non !== nothing "partition_symbols must contain at least one non-nothing symbol"
+    #     if idx_first_non > 1
+    #         @assert all(sym === nothing for sym in partition_symbols[1:idx_first_non-1]) "partition_symbols must have only nothing before first non-nothing"
+    #     end
+
+    #     # Find it
+    #     bad_idx = findnext(sym -> sym === nothing, partition_symbols, idx_first_non)
+    #     if bad_idx !== nothing
+    #         println("partition_symbols has nothing at index: ", bad_idx)
+    #     else
+    #         println("All clear")
+    #     end
+
+    #     @assert bad_idx === nothing "partition_symbols must not contain nothing after first non-nothing; found at index: $bad_idx"
+        
+    # end
+    valid_symbols = partition_symbols === nothing ? [] : (partition_symbols isa AbstractVector ? filter(sym -> sym !== nothing, partition_symbols) : [partition_symbols])
+    unexpected_part_symbol_count = 0
     
     for t in 1:length(x)
         # if t > length(partition_symbols)
         #     break
         # end
         
-        if partition_symbols != nothing
-            if partition_symbols[t] == nothing
+        if partition_symbols !== nothing && !testing_params.dont_mask_input_vector
+            if partition_symbols[t] === nothing
                 continue
+                # partition_symbols[t] = rand(valid_symbols)
+                # unexpected_part_symbol_count += 1
             end
             masked_V_in = mask_V_in_for_partition(ESN_params.V_in, partition_symbols[t], ESN_params.k, ESN_params.num_partitions)
         else
@@ -146,6 +189,10 @@ function run_ESN(x, ESN_params; S = nothing, partition_symbols = nothing)
         S = (1 − ESN_params.α)*S + ESN_params.α*tanh.(
             ESN_params.η*masked_V_in*x[t] + ESN_params.V_rec*S + ESN_params.V_bias)
         states[:, t] = S
+    end
+
+    if unexpected_part_symbol_count != 0
+        println("Number of unexpected part symbols: ", unexpected_part_symbol_count)
     end
     
     return(states')
@@ -164,7 +211,7 @@ function mask_states!(states, partition_symbols, k, num_partitions)
 end
 
 function train_one_step_pred(x, ESN_params, testing_params; partition_symbols=nothing, R_delay=1)
-    states = run_ESN(x, ESN_params; partition_symbols=partition_symbols)
+    states = run_ESN(x, ESN_params; partition_symbols=partition_symbols, testing_params=testing_params)
     
     target_z = x[1+R_delay:length(x)]
     @assert(size(states)[1]-R_delay == length(target_z))
@@ -183,7 +230,7 @@ function train_one_step_pred(x, ESN_params, testing_params; partition_symbols=no
 end
 
 function one_step_pred(x, ESN_params, R, testing_params; S = nothing, partition_symbols=nothing)
-    states = run_ESN(x, ESN_params; S = S, partition_symbols=partition_symbols)
+    states = run_ESN(x, ESN_params; S = S, partition_symbols=partition_symbols, testing_params=testing_params)
 
     if testing_params.mask_states_b4_readout
         if partition_symbols != nothing

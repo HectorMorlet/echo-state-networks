@@ -1,0 +1,136 @@
+\relax 
+\providecommand{\transparent@use}[1]{}
+\providecommand\hyper@newdestlabel[2]{}
+\citation{qiao_2016}
+\@writefile{lof}{\addvspace {10pt}}
+\@writefile{lot}{\addvspace {10pt}}
+\@writefile{toc}{\contentsline {chapter}{\chapternumberline {6}Echo state network with ordinal partition based sub-reservoirs}{54}{chapter.6}\protected@file@percent }
+\newlabel{chap:OPESNs}{{6}{54}{Echo state network with ordinal partition based sub-reservoirs}{chapter.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6.1}Implementation}{54}{section.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{Restricting the Recurrence Matrix}{54}{subsection*.60}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6.1}{\ignorespaces Architecture of the ordinal partition echo state network (OPESN). The reservoir is partitioned into $N_{obs}$ sub-reservoirs of size $k$. Input $\mathbf  {x}(t)$ is routed to the active sub-reservoir based on the ordinal partition $\pi _t$ (colour coded), and a single global readout $\mathbf  {C}_{\text  {out}}$ produces $\mathbf  {y}(t)$.}}{55}{figure.caption.59}\protected@file@percent }
+\newlabel{fig:OPESN}{{6.1}{55}{Architecture of the ordinal partition echo state network (OPESN). The reservoir is partitioned into $N_{obs}$ sub-reservoirs of size $k$. Input $\mathbf {x}(t)$ is routed to the active sub-reservoir based on the ordinal partition $\pi _t$ (colour coded), and a single global readout $\mathbf {C}_{\text {out}}$ produces $\mathbf {y}(t)$}{figure.caption.59}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6.1}{\ignorespaces Example transition probabilities used to form our restricted recurrence matrix $W_{rec}$.}}{57}{table.caption.61}\protected@file@percent }
+\newlabel{tab:transition_probs}{{6.1}{57}{Example transition probabilities used to form our restricted recurrence matrix $W_{rec}$}{table.caption.61}{}}
+\@writefile{toc}{\contentsline {subsection}{Input Routing}{57}{subsection*.63}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6.2}{\ignorespaces Visualisations of the recurrence matrix $\mathbf  {W}_{rec}$ under six connection schemes for a hypothetical OPESN with three partitions: (a) one-to-one weighted by $p_{ij}$; (b) constant one-to-one; (c) fully connected weighted by $p_{ij}$; (d) constant fully connected; (e) disconnected; and (f) sparsely connected. Shading intensity reflects relative weight magnitudes and internal weights for each sub-reservoir are colour-coded.}}{58}{figure.caption.62}\protected@file@percent }
+\newlabel{fig:W_rec_viz}{{6.2}{58}{Visualisations of the recurrence matrix $\mathbf {W}_{rec}$ under six connection schemes for a hypothetical OPESN with three partitions: (a) one-to-one weighted by $p_{ij}$; (b) constant one-to-one; (c) fully connected weighted by $p_{ij}$; (d) constant fully connected; (e) disconnected; and (f) sparsely connected. Shading intensity reflects relative weight magnitudes and internal weights for each sub-reservoir are colour-coded}{figure.caption.62}{}}
+\@writefile{toc}{\contentsline {subsection}{Iterating the reservoir and fitting the readout vector}{59}{subsection*.64}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6.3}{\ignorespaces OPESN state masking prior to readout. Only the $k$ states of the active sub-reservoir (purple) remain; all other states are zeroed before applying $\mathbf  {C}_{\text  {out}}$.}}{60}{figure.caption.65}\protected@file@percent }
+\newlabel{fig:OPESN_masked_states}{{6.3}{60}{OPESN state masking prior to readout. Only the $k$ states of the active sub-reservoir (purple) remain; all other states are zeroed before applying $\mathbf {C}_{\text {out}}$}{figure.caption.65}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6.2}Results}{60}{section.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{Lorenz - iterative prediction}{60}{subsection*.66}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{Lorenz - direct prediction}{61}{subsection*.68}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{R\"ossler}{61}{subsection*.70}\protected@file@percent }
+\newlabel{fig:OPESN_iterative_0_01}{{6.4a}{62}{Mean iterative prediction RMSE on the Lorenz series with time step size $\Delta t=0.01$ for the OPESN with delay $\tau =20$, noise level $\alpha =0.1$, and total reservoir size $k\approx 500$}{figure.caption.67}{}}
+\newlabel{sub@fig:OPESN_iterative_0_01}{{a}{62}{Mean iterative prediction RMSE on the Lorenz series with time step size $\Delta t=0.01$ for the OPESN with delay $\tau =20$, noise level $\alpha =0.1$, and total reservoir size $k\approx 500$}{figure.caption.67}{}}
+\newlabel{fig:OPESN_iterative_0_05}{{6.4b}{62}{Mean iterative prediction RMSE on the Lorenz series with time step size $\Delta t=0.05$ for the OPESN with delays $\tau =10,10,4$ for $m=2,3,4$ respectively, noise level $\alpha =0.1$, and total reservoir size $k\approx 500$}{figure.caption.67}{}}
+\newlabel{sub@fig:OPESN_iterative_0_05}{{b}{62}{Mean iterative prediction RMSE on the Lorenz series with time step size $\Delta t=0.05$ for the OPESN with delays $\tau =10,10,4$ for $m=2,3,4$ respectively, noise level $\alpha =0.1$, and total reservoir size $k\approx 500$}{figure.caption.67}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.4}{\ignorespaces Mean iterative prediction RMSE for the OPESN on the Lorenz $x$ component time series with additive noise $\alpha =0.1$ and reservoir size $k\approx 500$. (a) $\Delta t = 0.01$, delays $\tau =20$ for $m=2,3,4$; (b) $\Delta t = 0.05$, delays $\tau =10,10,4$ for $m=2,3,4$. Vertical bars show standard deviations; shaded regions show full range.}}{62}{figure.caption.67}\protected@file@percent }
+\newlabel{fig:OPESN_iterative}{{6.4}{62}{Mean iterative prediction RMSE for the OPESN on the Lorenz $x$ component time series with additive noise $\alpha =0.1$ and reservoir size $k\approx 500$. (a) $\Delta t = 0.01$, delays $\tau =20$ for $m=2,3,4$; (b) $\Delta t = 0.05$, delays $\tau =10,10,4$ for $m=2,3,4$. Vertical bars show standard deviations; shaded regions show full range}{figure.caption.67}{}}
+\newlabel{fig:OPESN_direct_0_01}{{6.5a}{63}{Mean direct prediction RMSE on the Lorenz series with time step size $\Delta t=0.01$ for the OPESN with delay $\tau =20$, noise level $\alpha =0.1$, and total reservoir size $k\approx 500$}{figure.caption.69}{}}
+\newlabel{sub@fig:OPESN_direct_0_01}{{a}{63}{Mean direct prediction RMSE on the Lorenz series with time step size $\Delta t=0.01$ for the OPESN with delay $\tau =20$, noise level $\alpha =0.1$, and total reservoir size $k\approx 500$}{figure.caption.69}{}}
+\newlabel{fig:OPESN_direct_0_05}{{6.5b}{63}{Mean direct prediction RMSE on the Lorenz series with time step size $\Delta t=0.05$ for the OPESN with delays $\tau =4$, noise level $\alpha =0.1$, and total reservoir size $k\approx 500$}{figure.caption.69}{}}
+\newlabel{sub@fig:OPESN_direct_0_05}{{b}{63}{Mean direct prediction RMSE on the Lorenz series with time step size $\Delta t=0.05$ for the OPESN with delays $\tau =4$, noise level $\alpha =0.1$, and total reservoir size $k\approx 500$}{figure.caption.69}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.5}{\ignorespaces Mean direct prediction RMSE for the OPESN on the Lorenz $x$ component time series with additive noise $\alpha =0.1$ and reservoir size $k\approx 500$. (a) $\Delta t = 0.01$, delays $\tau =20$ for $m=2,3,4$; (b) $\Delta t = 0.05$, delays $\tau =4$ for $m=2,3,4$. Vertical bars show standard deviations; shaded regions show full range.}}{63}{figure.caption.69}\protected@file@percent }
+\newlabel{fig:OPESN_direct}{{6.5}{63}{Mean direct prediction RMSE for the OPESN on the Lorenz $x$ component time series with additive noise $\alpha =0.1$ and reservoir size $k\approx 500$. (a) $\Delta t = 0.01$, delays $\tau =20$ for $m=2,3,4$; (b) $\Delta t = 0.05$, delays $\tau =4$ for $m=2,3,4$. Vertical bars show standard deviations; shaded regions show full range}{figure.caption.69}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.6}{\ignorespaces Mean iterative prediction RMSE for the OPESN on the Rössler $x$ component time series ($\Delta t = 0.1$, $\alpha =0.1$, $k\approx 500$). Delays $\tau =20,20,10$ for $m=2,3,4$, respectively. Vertical bars show standard deviations; shaded regions show full range.}}{64}{figure.caption.71}\protected@file@percent }
+\newlabel{fig:OPESN_rossler_iterative}{{6.6}{64}{Mean iterative prediction RMSE for the OPESN on the Rössler $x$ component time series ($\Delta t = 0.1$, $\alpha =0.1$, $k\approx 500$). Delays $\tau =20,20,10$ for $m=2,3,4$, respectively. Vertical bars show standard deviations; shaded regions show full range}{figure.caption.71}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.7}{\ignorespaces Mean direct prediction RMSE for the OPESN on the Rössler $x$ component time series ($\Delta t = 0.1$, $\alpha =0.1$, $k\approx 500$). Delays $\tau =10,20,10$ for $m=2,3,4$, respectively. Vertical bars show standard deviations; shaded regions show full range.}}{65}{figure.caption.72}\protected@file@percent }
+\newlabel{fig:OPESN_rossler_direct}{{6.7}{65}{Mean direct prediction RMSE for the OPESN on the Rössler $x$ component time series ($\Delta t = 0.1$, $\alpha =0.1$, $k\approx 500$). Delays $\tau =10,20,10$ for $m=2,3,4$, respectively. Vertical bars show standard deviations; shaded regions show full range}{figure.caption.72}{}}
+\@writefile{toc}{\contentsline {subsection}{Mackey-Glass}{65}{subsection*.73}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6.8}{\ignorespaces Mean iterative prediction RMSE for the OPESN on the Mackey-Glass time series ($\Delta t = 0.5$, $\alpha =0.1$, $k\approx 500$). Delay $\tau =20$ for all $m=2,3,4$. Vertical bars show standard deviations; shaded regions show full range.}}{66}{figure.caption.74}\protected@file@percent }
+\newlabel{fig:OPESN_mg_iterative}{{6.8}{66}{Mean iterative prediction RMSE for the OPESN on the Mackey-Glass time series ($\Delta t = 0.5$, $\alpha =0.1$, $k\approx 500$). Delay $\tau =20$ for all $m=2,3,4$. Vertical bars show standard deviations; shaded regions show full range}{figure.caption.74}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.9}{\ignorespaces Mean direct prediction RMSE for the OPESN on the Mackey-Glass time series ($\Delta t = 0.5$, $\alpha =0.1$, $k\approx 500$). Delay $\tau =20$ for all $m=2,3,4$. Vertical bars show standard deviations; shaded regions show full range.}}{67}{figure.caption.75}\protected@file@percent }
+\newlabel{fig:OPESN_mg_direct}{{6.9}{67}{Mean direct prediction RMSE for the OPESN on the Mackey-Glass time series ($\Delta t = 0.5$, $\alpha =0.1$, $k\approx 500$). Delay $\tau =20$ for all $m=2,3,4$. Vertical bars show standard deviations; shaded regions show full range}{figure.caption.75}{}}
+\@writefile{toc}{\contentsline {subsection}{Input Routing}{67}{subsection*.76}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{Sub-Reservoir Connections}{68}{subsection*.78}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{Resilience to Noise}{68}{subsection*.80}\protected@file@percent }
+\newlabel{fig:OPESN_routing_recursive_m_2}{{6.10a}{69}{OPESN Input Routing - Ordinal Partition Driven vs. Random Selection, $m=2$}{figure.caption.77}{}}
+\newlabel{sub@fig:OPESN_routing_recursive_m_2}{{a}{69}{OPESN Input Routing - Ordinal Partition Driven vs. Random Selection, $m=2$}{figure.caption.77}{}}
+\newlabel{fig:OPESN_routing_recursive_m_3}{{6.10b}{69}{OPESN Input Routing - Ordinal Partition Driven vs. Random Selection, $m=3$}{figure.caption.77}{}}
+\newlabel{sub@fig:OPESN_routing_recursive_m_3}{{b}{69}{OPESN Input Routing - Ordinal Partition Driven vs. Random Selection, $m=3$}{figure.caption.77}{}}
+\newlabel{fig:OPESN_routing_recursive_m_4}{{6.10c}{69}{OPESN Input Routing - Ordinal Partition Driven vs. Random Selection, $m=4$}{figure.caption.77}{}}
+\newlabel{sub@fig:OPESN_routing_recursive_m_4}{{c}{69}{OPESN Input Routing - Ordinal Partition Driven vs. Random Selection, $m=4$}{figure.caption.77}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.10}{\ignorespaces Mean iterative prediction RMSE on the Lorenz $x$ component ($\Delta t=0.01$, $\alpha =0.1$, $k=468$) comparing OPESN input routing by ordinal partition versus random routing, for delays $\tau =20$ and $m=2,3,4$ in subfigures (a)-(c). Vertical bars show standard deviations; shaded regions show full range.}}{69}{figure.caption.77}\protected@file@percent }
+\newlabel{fig:OPESN_routing_recursive_ordinal_vs_random}{{6.10}{69}{Mean iterative prediction RMSE on the Lorenz $x$ component ($\Delta t=0.01$, $\alpha =0.1$, $k=468$) comparing OPESN input routing by ordinal partition versus random routing, for delays $\tau =20$ and $m=2,3,4$ in subfigures (a)-(c). Vertical bars show standard deviations; shaded regions show full range}{figure.caption.77}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.11}{\ignorespaces Mean iterative prediction RMSE on the Lorenz $x$ component ($\Delta t=0.01$, $\alpha =0.1$, $k=468$) for OPESN variants of sub-reservoir connectivity. Delay $\tau =20$, $m=4$. Dashed black line is the disconnected baseline; vertical bars show its standard deviation.}}{70}{figure.caption.79}\protected@file@percent }
+\newlabel{fig:OPESN_recursive_sub_reservoir_connections_m_3}{{6.11}{70}{Mean iterative prediction RMSE on the Lorenz $x$ component ($\Delta t=0.01$, $\alpha =0.1$, $k=468$) for OPESN variants of sub-reservoir connectivity. Delay $\tau =20$, $m=4$. Dashed black line is the disconnected baseline; vertical bars show its standard deviation}{figure.caption.79}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.12}{\ignorespaces Mean direct prediction RMSE as a function of noise level $\alpha \in [0,1]$ for the OPESN on the Lorenz $x$ component ($\Delta t=0.01$, delay $\tau =20$, $k=468$). Curves are for lengths of prediction 1, 20, 50 and 100 steps; panels correspond to $m=1$-$4$.}}{71}{figure.caption.81}\protected@file@percent }
+\newlabel{fig:OPESN_noise_resilience_direct}{{6.12}{71}{Mean direct prediction RMSE as a function of noise level $\alpha \in [0,1]$ for the OPESN on the Lorenz $x$ component ($\Delta t=0.01$, delay $\tau =20$, $k=468$). Curves are for lengths of prediction 1, 20, 50 and 100 steps; panels correspond to $m=1$-$4$}{figure.caption.81}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.13}{\ignorespaces Iterative prediction RMSE as a function of noise level $\alpha \in [0,1]$ for the OPESN on the Lorenz $x$ component ($\Delta t=0.01$, delay $\tau =20$, $k=468$). Curves are for lengths of prediction 1, 20, 50 and 100 steps; panels correspond to $m=1$-$4$.}}{71}{figure.caption.82}\protected@file@percent }
+\newlabel{fig:OPESN_noise_resilience_recursive}{{6.13}{71}{Iterative prediction RMSE as a function of noise level $\alpha \in [0,1]$ for the OPESN on the Lorenz $x$ component ($\Delta t=0.01$, delay $\tau =20$, $k=468$). Curves are for lengths of prediction 1, 20, 50 and 100 steps; panels correspond to $m=1$-$4$}{figure.caption.82}{}}
+\@setckpt{Chapters/Chapter_6}{
+\setcounter{page}{72}
+\setcounter{equation}{0}
+\setcounter{enumi}{3}
+\setcounter{enumii}{0}
+\setcounter{enumiii}{0}
+\setcounter{enumiv}{0}
+\setcounter{footnote}{0}
+\setcounter{mpfootnote}{0}
+\setcounter{@memmarkcntra}{0}
+\setcounter{storedpagenumber}{1}
+\setcounter{book}{0}
+\setcounter{part}{0}
+\setcounter{chapter}{6}
+\setcounter{section}{2}
+\setcounter{subsection}{0}
+\setcounter{subsubsection}{0}
+\setcounter{paragraph}{0}
+\setcounter{subparagraph}{0}
+\setcounter{@ppsavesec}{0}
+\setcounter{@ppsaveapp}{0}
+\setcounter{vslineno}{0}
+\setcounter{poemline}{0}
+\setcounter{modulo@vs}{0}
+\setcounter{memfvsline}{0}
+\setcounter{verse}{0}
+\setcounter{chrsinstr}{0}
+\setcounter{poem}{0}
+\setcounter{newflo@tctr}{4}
+\setcounter{@contsubnum}{0}
+\setcounter{section@level}{0}
+\setcounter{maxsecnumdepth}{1}
+\setcounter{sidefootnote}{0}
+\setcounter{pagenote}{0}
+\setcounter{pagenoteshadow}{0}
+\setcounter{memfbvline}{0}
+\setcounter{bvlinectr}{0}
+\setcounter{cp@cntr}{0}
+\setcounter{ism@mctr}{0}
+\setcounter{xsm@mctr}{0}
+\setcounter{csm@mctr}{0}
+\setcounter{ksm@mctr}{0}
+\setcounter{xksm@mctr}{0}
+\setcounter{cksm@mctr}{0}
+\setcounter{msm@mctr}{0}
+\setcounter{xmsm@mctr}{0}
+\setcounter{cmsm@mctr}{0}
+\setcounter{bsm@mctr}{0}
+\setcounter{workm@mctr}{0}
+\setcounter{sheetsequence}{83}
+\setcounter{lastsheet}{95}
+\setcounter{lastpage}{84}
+\setcounter{figure}{13}
+\setcounter{lofdepth}{1}
+\setcounter{table}{1}
+\setcounter{lotdepth}{1}
+\setcounter{parentequation}{0}
+\setcounter{thmt@dummyctr}{0}
+\setcounter{Item}{3}
+\setcounter{Hfootnote}{0}
+\setcounter{bookmark@seq@number}{27}
+\setcounter{memhycontfloat}{0}
+\setcounter{mem@Hpagenote}{0}
+\setcounter{float@type}{4}
+\setcounter{svg@param@lastpage}{0}
+\setcounter{svg@param@currpage}{-1}
+\setcounter{caption@flags}{2}
+\setcounter{continuedfloat}{0}
+\setcounter{subfigure}{0}
+\setcounter{subtable}{0}
+\setcounter{theorem}{0}
+\setcounter{claim}{0}
+\setcounter{fact}{0}
+}

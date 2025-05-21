@@ -1,0 +1,74 @@
+\contentsline {chapter}{Abstract}{i}{chapter*.1}%
+\contentsline {chapter}{Acknowledgements}{ii}{chapter*.2}%
+\contentsline {chapter}{Contents}{iii}{section*.3}%
+\contentsline {chapter}{List of Figures}{v}{section*.4}%
+\contentsline {chapter}{List of Tables}{x}{section*.5}%
+\contentsline {chapter}{\chapternumberline {1}Introduction}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Reservoir computing and echo state networks}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}The potential of modularity and feature integration}{2}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Ordinal partition analysis: a novel feature for ESNs}{2}{section.1.3}%
+\contentsline {section}{\numberline {1.4}Problem statement and motivation}{3}{section.1.4}%
+\contentsline {section}{\numberline {1.5}Aims and contributions}{3}{section.1.5}%
+\contentsline {section}{\numberline {1.6}Thesis outline}{4}{section.1.6}%
+\contentsline {chapter}{\chapternumberline {2}Modular echo state networks}{6}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Reservoir computing}{6}{section.2.1}%
+\contentsline {subsection}{Echo state networks}{6}{subsection*.6}%
+\contentsline {subsection}{Computational efficiency}{8}{subsection*.8}%
+\contentsline {subsection}{The echo state property}{9}{subsection*.9}%
+\contentsline {section}{\numberline {2.2}Mixture-of-experts}{11}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Modular echo state networks}{13}{section.2.3}%
+\contentsline {subsection}{Restricted echo state networks}{14}{subsection*.11}%
+\contentsline {subsection}{Context sensitive input routing}{17}{subsection*.14}%
+\contentsline {section}{\numberline {2.4}Readout switching}{18}{section.2.4}%
+\contentsline {chapter}{\chapternumberline {3}Ordinal partitions}{20}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Ordinal partitions and their measures}{20}{section.3.1}%
+\contentsline {subsection}{Generating the ordinal partition}{20}{subsection*.15}%
+\contentsline {subsection}{Probabilities}{22}{subsection*.19}%
+\contentsline {subsection}{Forbidden patterns}{23}{subsection*.21}%
+\contentsline {subsection}{Choosing $\tau $ and $m$}{24}{subsection*.22}%
+\contentsline {section}{\numberline {3.2}Applications of ordinal analysis}{24}{section.3.2}%
+\contentsline {subsection}{Classification}{24}{subsection*.23}%
+\contentsline {subsection}{Change point detection}{25}{subsection*.24}%
+\contentsline {subsection}{Analysis of reservoir computing systems}{25}{subsection*.25}%
+\contentsline {subsection}{Ordinal partitions as a predictive feature}{26}{subsection*.26}%
+\contentsline {chapter}{\chapternumberline {4}Testing methods}{27}{chapter.4}%
+\contentsline {subsection}{Prediction and error}{27}{subsection*.27}%
+\contentsline {subsection}{Testing data}{28}{subsection*.30}%
+\contentsline {subsection}{ESN instantiation and readout fitting}{30}{subsection*.32}%
+\contentsline {subsection}{Selection of ordinal pattern delay $\tau $}{32}{subsection*.33}%
+\contentsline {subsection}{Practical considerations for the ordinal pattern dimension}{32}{subsection*.36}%
+\contentsline {subsection}{Testing procedure}{35}{subsection*.37}%
+\contentsline {chapter}{\chapternumberline {5}Echo state network with ordinal partition based readout switching}{36}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Implementation}{36}{section.5.1}%
+\contentsline {subsection}{Instantiating the weights and iterating the reservoir}{36}{subsection*.38}%
+\contentsline {subsection}{Fitting the readout vectors}{37}{subsection*.39}%
+\contentsline {section}{\numberline {5.2}Results}{38}{section.5.2}%
+\contentsline {subsection}{Lorenz - iterative prediction}{38}{subsection*.40}%
+\contentsline {subsection}{Lorenz - direct prediction}{39}{subsection*.42}%
+\contentsline {subsection}{Comparison across attractors}{41}{subsection*.44}%
+\contentsline {subsubsection}{R\"ossler system}{41}{subsubsection*.45}%
+\contentsline {subsubsection}{Mackey-Glass system}{43}{subsubsection*.49}%
+\contentsline {subsection}{Gating}{47}{subsection*.53}%
+\contentsline {subsection}{Resilience to noise}{51}{subsection*.55}%
+\contentsline {subsection}{Extended discussion}{53}{subsection*.58}%
+\contentsline {chapter}{\chapternumberline {6}Echo state network with ordinal partition based sub-reservoirs}{54}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Implementation}{54}{section.6.1}%
+\contentsline {subsection}{Restricting the Recurrence Matrix}{54}{subsection*.60}%
+\contentsline {subsection}{Input Routing}{57}{subsection*.63}%
+\contentsline {subsection}{Iterating the reservoir and fitting the readout vector}{59}{subsection*.64}%
+\contentsline {section}{\numberline {6.2}Results}{60}{section.6.2}%
+\contentsline {subsection}{Lorenz - iterative prediction}{60}{subsection*.66}%
+\contentsline {subsection}{Lorenz - direct prediction}{61}{subsection*.68}%
+\contentsline {subsection}{R\"ossler}{61}{subsection*.70}%
+\contentsline {subsection}{Mackey-Glass}{65}{subsection*.73}%
+\contentsline {subsection}{Input Routing}{67}{subsection*.76}%
+\contentsline {subsection}{Sub-Reservoir Connections}{68}{subsection*.78}%
+\contentsline {subsection}{Resilience to Noise}{68}{subsection*.80}%
+\contentsline {chapter}{\chapternumberline {7}Conclusion}{72}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Key findings}{72}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Contributions and implications}{74}{section.7.2}%
+\contentsline {section}{\numberline {7.3}Limitations and further research}{74}{section.7.3}%
+\contentsline {appendix}{\chapternumberline {A}OPESN sub-reservoir connections}{76}{chapter.A}%
+\contentsline {subsection}{OPESN with stochastic connections}{76}{subsection*.83}%
+\contentsline {subsection}{Further sub-reservoir connection experiments}{77}{subsection*.84}%
+\contentsline {chapter}{Bibliography}{80}{chapter*.88}%
